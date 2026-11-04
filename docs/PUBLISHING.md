@@ -29,7 +29,7 @@ taken by an unrelated package, so the npm package uses the `@mitkox` scope.
 ## 2. Tag the release
 
 ```sh
-git tag -a v0.2.0 -m "dsh-herdr 0.2.0"
+git tag -a v0.3.0 -m "dsh-herdr 0.3.0"
 git push origin main --tags
 ```
 

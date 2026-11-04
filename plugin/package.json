@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-herdr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Report a DeepSeek Harness host as a Herdr agent (OSC 7501) and publish a per-session state document for the Herdr panel.",
   "type": "module",
