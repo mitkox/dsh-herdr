@@ -1,7 +1,7 @@
 {
   "name": "@mitkox/dsh-herdr",
   "version": "0.2.0",
-  "description": "See and monitor DeepSeek Harness (dsh) agents inside Herdr — agent status over OSC 7501, a live Herdr panel, and an optional native DSH host plugin.",
+  "description": "See and monitor DeepSeek Harness (dsh) agents inside Herdr \u2014 agent status over OSC 7501, a live Herdr panel, and an optional native DSH host plugin.",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
@@ -14,6 +14,7 @@
     "LICENSE",
     "NOTICE",
     "app/install.sh",
+    "app/programs.mjs",
     "app/programs.json",
     "app/README.md",
     "app/screenshots/",

@@ -184,7 +184,10 @@ export default class DshMonitor extends View {
     );
 
     const byId = new Map();
-    for (const f of ordered) for (const s of f.sessions ?? []) if (!byId.has(s.id)) byId.set(s.id, s);
+    for (const f of ordered) for (const s of f.sessions ?? []) {
+      const previous = byId.get(s.id);
+      if (!previous || (s.updatedMs ?? 0) > (previous.updatedMs ?? 0)) byId.set(s.id, s);
+    }
     this.sessions = [...byId.values()].sort(
       (a, b) => (RANK[a.status] ?? 9) - (RANK[b.status] ?? 9) || (b.updatedMs ?? 0) - (a.updatedMs ?? 0) || a.title.localeCompare(b.title),
     );

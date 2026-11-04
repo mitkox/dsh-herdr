@@ -37,7 +37,7 @@
  * herdr-core inside a pane).
  */
 import { spawn } from 'node:child_process'
-import { promises as fs, existsSync, openSync, closeSync, writeSync, readFileSync, unlinkSync, mkdirSync } from 'node:fs'
+import { promises as fs, existsSync, openSync, closeSync, writeSync, fchmodSync, readFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -94,7 +94,7 @@ const ATTACH_PID = Number(flagValue('host-pid') || 0) || null
 const ATTACH_LOG = flagValue('log') || path.join(STATE_ROOT, 'attach.log')
 const OSC = !NO_OSC && (IN_HERDR || FORCE_OSC || command === 'attach')
 
-if (command === 'help' || command === '--help' || command === '-h') {
+if (command === 'help' || rest.includes('--help') || rest.includes('-h')) {
   printHelp()
   process.exit(0)
 }
@@ -180,7 +180,7 @@ const dim = (s) => ansi('2', s)
 const bold = (s) => ansi('1', s)
 const fmtClock = (ms) => new Date(ms).toLocaleTimeString('en-GB', { hour12: false })
 const clip = (s, n) => {
-  const t = String(s ?? '').replace(/\s+/g, ' ').trim()
+  const t = String(s ?? '').replace(/[\x00-\x1f\x7f-\x9f]/g, ' ').replace(/\s+/g, ' ').trim()
   return t.length > n ? t.slice(0, n - 1) + '…' : t
 }
 const oscRecord = (fields) => `\x1b]7501;${fields}\x07`
@@ -248,15 +248,17 @@ function displayTitle(s) {
 }
 
 function toolSummary(name, argsRaw) {
+  name = clip(name, 80)
   let args = {}
   try { args = JSON.parse(argsRaw || '{}') } catch { /* not JSON */ }
+  if (args === null || typeof args !== 'object') args = {}
   const fileBase = typeof args.file_path === 'string' ? path.basename(args.file_path)
     : typeof args.path === 'string' ? path.basename(args.path) : ''
   switch (name) {
     case 'bash': return `bash $ ${clip(String(args.command ?? '').split('\n')[0], 110)}`
     case 'read': case 'write': case 'edit': {
       const verb = name === 'read' ? 'read' : name === 'write' ? 'write' : 'edit'
-      return `${verb} ${fileBase || clip(args.file_path || args.path || '', 70)}`
+      return `${verb} ${clip(fileBase || args.file_path || args.path || '', 70)}`
     }
     case 'glob': return `glob ${clip(args.pattern ?? '', 70)}`
     case 'grep': return `grep ${clip(args.pattern ?? '', 70)}`
@@ -289,7 +291,7 @@ function ingest(s, ev, live) {
   const time = typeof ev.time === 'number' ? ev.time : Date.now()
   if (time > s.lastEventMs) s.lastEventMs = time
   let changed = false
-  const label = dim(displayTitle(s).slice(0, 26).padEnd(26))
+  const label = dim(clip(displayTitle(s), 26).padEnd(26))
   switch (ev.type) {
     case 'session/title': {
       const title = ev?.data?.title
@@ -314,7 +316,7 @@ function ingest(s, ev, live) {
       changed = true
       if (live) {
         const kind = ev?.data?.reason?.kind
-        const mark = kind && kind !== 'completed' && kind !== 'stop' ? ` ${ansi('33', `(${kind})`)}` : ''
+        const mark = kind && kind !== 'completed' && kind !== 'stop' ? ` ${ansi('33', `(${clip(kind, 40)})`)}` : ''
         writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} ${ansi('32', `■ turn ${s.turn} ended`)}${mark}`)
       }
       break
@@ -459,13 +461,13 @@ async function refresh(initial) {
       continue
     }
     if (stat.size === s.lastSize) continue
-    s.lastSize = stat.size
     const text = await decompress(file)
     if (text === null) continue // mid-write: retry next tick
     for (const line of text.split('\n')) {
       if (!line) continue
       let ev
       try { ev = JSON.parse(line) } catch { continue }
+      if (!ev || typeof ev !== 'object') continue
       if (ev.type === 'session') {
         if (typeof ev.cwd === 'string' && ev.cwd) s.cwd = ev.cwd
         if (typeof ev.agentPreset === 'string') s.preset = ev.agentPreset
@@ -475,6 +477,7 @@ async function refresh(initial) {
       }
       ingest(s, ev, !initial)
     }
+    s.lastSize = stat.size
   }
 }
 
@@ -514,28 +517,25 @@ function aggregate() {
   }
 }
 
+function sessionSnapshot(s) {
+  const blocked = blockedOf(s)
+  const stale = staleTurn(s)
+  return {
+    id: s.id, title: displayTitle(s), cwd: s.cwd, preset: s.preset, depth: s.depth,
+    status: blocked ? 'blocked' : s.openTurn && !stale ? 'working' : 'idle',
+    blockedReason: blocked ? blocked.kind : null,
+    activity: blocked ? blocked.msg : stale ? `stale: ${s.activity}` : s.activity,
+    turn: s.turn, updatedMs: Math.round(s.lastEventMs),
+    lastTurnEndMs: s.lastTurnEndMs ? Math.round(s.lastTurnEndMs) : null,
+  }
+}
+
 async function writeState(mode, extra = {}) {
   const agg = aggregate()
   const list = [...sessions.values()]
     .sort((a, b) => b.lastEventMs - a.lastEventMs)
     .slice(0, MAX_LISTED_SESSIONS)
-    .map((s) => {
-      const blocked = blockedOf(s)
-      const stale = staleTurn(s)
-      return {
-        id: s.id,
-        title: displayTitle(s),
-        cwd: s.cwd,
-        preset: s.preset,
-        depth: s.depth,
-        status: blocked ? 'blocked' : s.openTurn && !stale ? 'working' : 'idle',
-        blockedReason: blocked ? blocked.kind : null,
-        activity: blocked ? blocked.msg : stale ? `stale: ${s.activity}` : s.activity,
-        turn: s.turn,
-        updatedMs: Math.round(s.lastEventMs),
-        lastTurnEndMs: s.lastTurnEndMs ? Math.round(s.lastTurnEndMs) : null,
-      }
-    })
+    .map(sessionSnapshot)
   const doc = {
     version: 1,
     updatedMs: Date.now(),
@@ -556,18 +556,37 @@ async function writeState(mode, extra = {}) {
 
 // ---------------------------------------------------------------- herdr attach
 
-function hcGet(pane) {
+/** Bound subprocesses so an unavailable Herdr core cannot stall discovery. */
+function captureCommand(command, args, timeout = 5000) {
   return new Promise((resolve) => {
     try {
-      const child = spawn(HC_BIN, ['get', pane], { stdio: ['ignore', 'pipe', 'ignore'] })
-      let out = ''
-      child.stdout.on('data', (c) => { out += c })
-      child.on('error', () => resolve(null))
-      child.on('close', () => {
-        try { resolve(JSON.parse(out)) } catch { resolve(null) }
+      const child = spawn(command, args, {
+        stdio: ['ignore', 'pipe', 'ignore'], timeout, killSignal: 'SIGKILL',
       })
+      let out = ''
+      child.stdout.on('data', (chunk) => { out += chunk })
+      child.on('error', () => resolve(null))
+      child.on('close', (code) => resolve(code === 0 ? out : null))
     } catch { resolve(null) }
   })
+}
+
+async function hcJson(args) {
+  const out = await captureCommand(HC_BIN, args)
+  try { return out === null ? null : JSON.parse(out) } catch { return null }
+}
+
+const hcGet = (pane) => hcJson(['get', pane])
+
+/** Keep each complete refresh/publication or discovery tick in flight alone. */
+function pollEvery(tick, interval) {
+  let running = false
+  return setInterval(async () => {
+    if (running) return
+    running = true
+    try { await tick() } catch { /* retry on the next tick */ }
+    finally { running = false }
+  }, interval)
 }
 
 function hostAlive(pid) {
@@ -579,15 +598,7 @@ async function resolveHostTty(pid) {
   let pty
   try { pty = await fs.readlink(`/proc/${pid}/fd/1`) } catch { /* not Linux */ }
   if (!pty) {
-    const tty = await new Promise((resolve) => {
-      try {
-        const child = spawn('ps', ['-p', String(pid), '-o', 'tty='], { stdio: ['ignore', 'pipe', 'ignore'] })
-        let out = ''
-        child.stdout.on('data', (chunk) => { out += chunk })
-        child.on('error', () => resolve(''))
-        child.on('close', () => resolve(out.trim()))
-      } catch { resolve('') }
-    })
+    const tty = (await captureCommand('ps', ['-p', String(pid), '-o', 'tty=']))?.trim()
     if (!tty || tty === '?' || tty === '??') {
       throw new Error(`cannot find the terminal of host pid ${pid} (is the dsh host running inside herdr-core?)`)
     }
@@ -649,7 +660,10 @@ async function attachMain() {
 
   // Daemon child: feed goes to a log file.
   if (DAEMON_CHILD) {
-    try { feedFileFd = openSync(ATTACH_LOG, 'a') } catch { feedFileFd = null }
+    try {
+      feedFileFd = openSync(ATTACH_LOG, 'a', 0o600)
+      fchmodSync(feedFileFd, 0o600)
+    } catch { feedFileFd = null }
   }
 
   await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, pane: target.pane, hostPid: target.pid, pty: target.pty, startedMs: Date.now() }))
@@ -689,6 +703,7 @@ async function attachMain() {
     try { unlinkSync(lockPath) } catch { /* gone */ }
     if (DAEMON_CHILD) writeFeed(`attach: stopped (${reason})`)
     else writeStdout(dim(`dsh-herdr attach: stopped (${reason})\n`))
+    if (feedFileFd !== null) { try { closeSync(feedFileFd) } catch { /* log closed */ } }
     process.exit(0)
   }
   process.on('SIGINT', () => cleanup('SIGINT'))
@@ -706,7 +721,7 @@ async function attachMain() {
       + `  ${dim('ctrl-c to detach')}\n`)
   }
 
-  const timer = setInterval(async () => {
+  const timer = pollEvery(async () => {
     try {
       if (!hostAlive(target.pid)) return cleanup('host exited')
       await refresh(false)
@@ -738,18 +753,6 @@ function appendFileSyncSafe(file, text) {
     const fd = openSync(file, 'a')
     try { writeSync(fd, text) } finally { closeSync(fd) }
   } catch { /* ignore */ }
-}
-
-function hcJson(args) {
-  return new Promise((resolve) => {
-    try {
-      const child = spawn(HC_BIN, args, { stdio: ['ignore', 'pipe', 'ignore'] })
-      let out = ''
-      child.stdout.on('data', (c) => { out += c })
-      child.on('error', () => resolve(null))
-      child.on('close', () => { try { resolve(JSON.parse(out)) } catch { resolve(null) } })
-    } catch { resolve(null) }
-  })
 }
 
 /** A dsh web host: node running the dsh launcher with `web` (or an app named *dsh*web*). */
@@ -784,13 +787,29 @@ function spawnAttach(pane, hostPid) {
 
 async function daemonMain() {
   mkdirSync(STATE_ROOT, { recursive: true })
+  const pidFile = path.join(STATE_ROOT, 'daemon.pid')
+  let previous = 0
+  let hadPidFile = false
+  try { previous = Number(readFileSync(pidFile, 'utf8')); hadPidFile = true } catch { /* first start */ }
+  if (previous > 0 && alivePid(previous)) return
+  if (hadPidFile) { try { unlinkSync(pidFile) } catch { /* stale or absent */ } }
+  let pidFd
+  try { pidFd = openSync(pidFile, 'wx', 0o600) } catch (error) {
+    if (error.code === 'EEXIST') return
+    throw error
+  }
+  try { writeSync(pidFd, String(process.pid)) } finally { closeSync(pidFd) }
+  const removePid = () => {
+    try { if (Number(readFileSync(pidFile, 'utf8')) === process.pid) unlinkSync(pidFile) } catch { /* already removed */ }
+  }
+  process.on('exit', removePid)
   logLine(`daemon: started (interval ${DAEMON_INTERVAL}ms, state ${STATE_PATH})`)
   if (!QUIET) {
     writeStdout(`${bold('dsh-herdr daemon')} — keeping every dsh web pane in Herdr attached\n`)
     writeStdout(dim(`  log ${DAEMON_LOG.replace(HOME, '~')} · state ${STATE_PATH.replace(HOME, '~')} · ctrl-c to stop\n`))
   }
   let stopped = false
-  const stop = (signal) => { stopped = true; logLine(`daemon: stopped (${signal})`); process.exit(0) }
+  const stop = (signal) => { stopped = true; removePid(); logLine(`daemon: stopped (${signal})`); process.exit(0) }
   process.on('SIGINT', () => stop('SIGINT'))
   process.on('SIGTERM', () => stop('SIGTERM'))
   process.on('SIGHUP', () => stop('SIGHUP'))
@@ -834,7 +853,7 @@ async function daemonMain() {
   }
 
   await tick()
-  const timer = setInterval(() => { tick().catch(() => {}) }, DAEMON_INTERVAL)
+  const timer = pollEvery(tick, DAEMON_INTERVAL)
   // keep the event loop alive; nothing else to await
   await new Promise(() => { void timer })
 }
@@ -861,10 +880,7 @@ async function watchMain() {
       osc: OSC,
       state_path: STATE_PATH,
       aggregate: agg,
-      sessions: [...sessions.values()].map((s) => ({
-        id: s.id, title: displayTitle(s), cwd: s.cwd,
-        status: s.openTurn ? 'working' : 'idle', activity: s.activity, updatedMs: Math.round(s.lastEventMs),
-      })),
+      sessions: [...sessions.values()].map(sessionSnapshot),
     }
     process.stdout.write(JSON.stringify(out, null, 2) + '\n')
     return
@@ -888,7 +904,7 @@ async function watchMain() {
   process.on('SIGTERM', () => stop('SIGTERM'))
   process.on('SIGHUP', () => stop('SIGHUP'))
 
-  setInterval(async () => {
+  pollEvery(async () => {
     try {
       await refresh(false)
       report(false)

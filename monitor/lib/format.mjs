@@ -7,7 +7,7 @@ const ESC = '\u001b[';
 /** @param {NodeJS.WriteStream|undefined} stream @param {NodeJS.ProcessEnv} [env] */
 export function makeColors(stream = process.stdout, env = process.env) {
 	const enabled = Boolean(stream && stream.isTTY) && !env.NO_COLOR && env.TERM !== 'dumb';
-	const wrap = (code) => (text) => enabled ? `${ESC}${code}m${text}${ESC}0m` : String(text);
+	const wrap = (code) => (text) => enabled ? `${ESC}${code}m${oneLine(text)}${ESC}0m` : oneLine(text);
 	return {
 		enabled,
 		bold: wrap('1'),
@@ -68,14 +68,14 @@ export function eventLine(event, colors, { verbose = false, toolCalls = null } =
 	const type = event.type;
 	switch (type) {
 		case 'turn/start':
-			return colors.dim(`── turn ${data.turn ?? '?'} started ──`);
+			return colors.dim(`── turn ${oneLine(data.turn ?? '?')} started ──`);
 		case 'turn/end': {
-			const reason = data.reason?.kind ?? 'done';
-			const line = `── turn ${data.turn ?? '?'} ended (${reason}) ──`;
+			const reason = oneLine(data.reason?.kind ?? 'done');
+			const line = `── turn ${oneLine(data.turn ?? '?')} ended (${reason}) ──`;
 			return reason === 'error' ? colors.red(line) : colors.dim(line);
 		}
 		case 'tool/call': {
-			const name = data.name ?? 'tool';
+			const name = oneLine(data.name ?? 'tool');
 			const summary = formatArgs(data.arguments);
 			if (toolCalls && data.callId) toolCalls.set(data.callId, { name, start: event.time });
 			return `${colors.blue('⚙')} ${colors.bold(name)}${summary ? colors.gray(` ${summary}`) : ''}`;
@@ -84,7 +84,7 @@ export function eventLine(event, colors, { verbose = false, toolCalls = null } =
 			const failed = Boolean(data.error) || Boolean(data.message?.error);
 			const callId = data.message?.toolCallId ?? data.message?.source?.callId ?? data.toolCallId ?? null;
 			const known = callId && toolCalls ? toolCalls.get(callId) : null;
-			const name = known?.name ? `${known.name} ` : '';
+			const name = known?.name ? `${oneLine(known.name)} ` : '';
 			const took = known?.start && typeof event.time === 'number' ? ` (${Math.max(0, event.time - known.start)}ms)` : '';
 			const errorText = data.error?.message ?? data.message?.error?.message ?? '';
 			return failed
@@ -102,11 +102,11 @@ export function eventLine(event, colors, { verbose = false, toolCalls = null } =
 			return `${colors.green('👤')} ${firstLine(text)}`;
 		}
 		case 'approval/asked':
-			return `${colors.yellow('⏸')} ${colors.yellow('approval needed')}: ${data.toolName ?? 'tool'}${data.reason ? colors.gray(` — ${firstLine(data.reason)}`) : ''}`;
+			return `${colors.yellow('⏸')} ${colors.yellow('approval needed')}: ${oneLine(data.toolName ?? 'tool')}${data.reason ? colors.gray(` — ${firstLine(data.reason)}`) : ''}`;
 		case 'approval/decided':
-			return `${colors.green('▶')} approval ${data.outcome ?? 'decided'}`;
+			return `${colors.green('▶')} approval ${oneLine(data.outcome ?? 'decided')}`;
 		case 'session/title':
-			return data.title ? `${colors.gray('🏷')} title: ${data.title}` : null;
+			return data.title ? `${colors.gray('🏷')} title: ${oneLine(data.title)}` : null;
 		case 'step/start':
 		case 'step/end':
 		case 'request/header':
@@ -129,9 +129,9 @@ export function formatArgs(argumentsJson) {
 	try {
 		args = JSON.parse(argumentsJson);
 	} catch {
-		return String(argumentsJson).slice(0, 100);
+		return oneLine(argumentsJson).slice(0, 100);
 	}
-	if (!args || typeof args !== 'object') return String(args).slice(0, 80);
+	if (!args || typeof args !== 'object') return oneLine(args).slice(0, 80);
 	const pick = (...keys) => {
 		for (const key of keys) {
 			const value = args[key];
@@ -159,7 +159,7 @@ export function formatArgs(argumentsJson) {
 }
 
 function oneLine(text) {
-	return String(text ?? '').replace(/\s+/g, ' ').trim();
+	return String(text ?? '').replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function textBlocks(content) {
@@ -172,5 +172,5 @@ function textBlocks(content) {
 }
 
 function firstLine(text) {
-	return text.split('\n').map((l) => l.trim()).find((l) => l !== '') ?? '';
+	return oneLine(text.split('\n').map((l) => l.trim()).find((l) => l !== '') ?? '');
 }

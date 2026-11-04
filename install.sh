@@ -24,17 +24,15 @@ else
   REPO_DIR=$(cd "$(dirname "$SELF")" && pwd -P)
 fi
 BIN_SRC="$REPO_DIR/bin/dsh-herdr"
-MOD_SRC="$REPO_DIR/app/mods/dsh-monitor"
-PROGRAMS_SRC="$REPO_DIR/app/programs.json"
-PLUGIN_DIR="$REPO_DIR/plugin"
 
 HOME_DIR=${HOME:?}
 BIN_DST="$HOME_DIR/.local/bin/dsh-herdr"
-APP_HOME=${HERDR_APP_HOME:-$HOME_DIR/.config/herdr-app}
+APP_HOME=${HERDR_APP_HOME:-${XDG_CONFIG_HOME:-$HOME_DIR/.config}/herdr-app}
 MOD_DST="$APP_HOME/mods/dsh-monitor"
 PROGRAMS_DST="$APP_HOME/programs.json"
-BACKUP_DST="$APP_HOME/programs.json.dsh-herdr.bak"
-UNIT_DIR="$HOME_DIR/.config/systemd/user"
+UNIT_DIR="${XDG_CONFIG_HOME:-$HOME_DIR/.config}/systemd/user"
+DATA_DIR="${XDG_DATA_HOME:-$HOME_DIR/.local/share}/dsh-herdr"
+PLUGIN_DIR="$DATA_DIR/plugin"
 UNIT_DST="$UNIT_DIR/dsh-herdr-daemon.service"
 STATE_DIR="${XDG_STATE_HOME:-$HOME_DIR/.local/state}/dsh-herdr"
 
@@ -43,6 +41,11 @@ die() { printf 'install.sh: %s\n' "$*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "missing required command: $1"; }
 
 stop_reporters() {
+  # Stop discovery before its children so it cannot immediately replace them.
+  local dpid
+  dpid=$(cat "$STATE_DIR/daemon.pid" 2>/dev/null || true)
+  [ -n "${dpid:-}" ] && kill "$dpid" 2>/dev/null || true
+  rm -f "$STATE_DIR/daemon.pid"
   for f in "$STATE_DIR"/attach-*.json; do
     [ -f "$f" ] || continue
     local pid
@@ -50,44 +53,6 @@ stop_reporters() {
     [ -n "${pid:-}" ] && kill "$pid" 2>/dev/null || true
     rm -f "$f"
   done
-  # The daemon also re-spawns reporters, so stop it first when it is ours.
-  local dpid
-  dpid=$(cat "$STATE_DIR/daemon.pid" 2>/dev/null || true)
-  [ -n "${dpid:-}" ] && kill "$dpid" 2>/dev/null || true
-  rm -f "$STATE_DIR/daemon.pid"
-}
-
-merge_programs_json() {
-  [[ -f "$PROGRAMS_SRC" ]] || { say "  - no programs.json snippet, skipping"; return 0; }
-  REPO_PROGRAMS="$PROGRAMS_SRC" DST="$PROGRAMS_DST" BACKUP="$BACKUP_DST" node -e '
-    const fs = require("node:fs")
-    const dst = process.env.DST
-    const backup = process.env.BACKUP
-    const ours = JSON.parse(fs.readFileSync(process.env.REPO_PROGRAMS, "utf8"))
-    let current = {}
-    if (fs.existsSync(dst)) {
-      try {
-        current = JSON.parse(fs.readFileSync(dst, "utf8"))
-      } catch (error) {
-        console.error(`  ! existing ${dst} is not valid JSON (${error.message}); not touching it`)
-        process.exit(0)
-      }
-      fs.copyFileSync(dst, backup)
-    }
-    fs.mkdirSync(require("node:path").dirname(dst), { recursive: true })
-    const merged = { ...current }
-    const programs = { ...(current.programs || {}) }
-    for (const [key, entry] of Object.entries(ours.programs || {})) {
-      const existing = programs[key]
-      programs[key] = existing && typeof existing === "object" ? { ...existing, ...entry } : entry
-    }
-    merged.programs = programs
-    for (const [key, value] of Object.entries(ours)) if (key !== "programs") merged[key] = merged[key] ?? value
-    const tmp = dst + ".tmp"
-    fs.writeFileSync(tmp, JSON.stringify(merged, null, 2) + "\n")
-    fs.renameSync(tmp, dst)
-    console.log(`  + programs.json entries: ${Object.keys(ours.programs || {}).join(", ")}`)
-  '
 }
 
 install_files() {
@@ -100,21 +65,27 @@ install_files() {
     }
   '
   say "Installing dsh-herdr:"
-  install -d "$HOME_DIR/.local/bin" "$APP_HOME/mods" "$STATE_DIR"
-  install -m 0755 "$BIN_SRC" "$BIN_DST"
+  install -d "$HOME_DIR/.local/bin" "$APP_HOME/mods" "$STATE_DIR" "$DATA_DIR"
+  # Keep the installer and optional plugin with the command after this checkout
+  # moves. Compare physical paths: on macOS $TMPDIR lives behind a symlink
+  # (/var -> /private/var), so a logical comparison would copy the payload onto
+  # itself and make `install` fail with "are the same file".
+  if [[ "$REPO_DIR" != "$(cd "$DATA_DIR" && pwd -P)" ]]; then
+    install -d "$DATA_DIR/bin"
+    install -m 0755 "$BIN_SRC" "$DATA_DIR/bin/dsh-herdr"
+    install -m 0755 "$REPO_DIR/install.sh" "$DATA_DIR/install.sh"
+    cp "$REPO_DIR/package.json" "$DATA_DIR/package.json"
+    for component in app plugin; do
+      rm -rf -- "${DATA_DIR:?}/$component"
+      cp -R -- "$REPO_DIR/$component" "$DATA_DIR/$component"
+    done
+  fi
+  ln -sfn "$DATA_DIR/bin/dsh-herdr" "$BIN_DST"
   say "  + $BIN_DST"
 
-  if [[ -x "$REPO_DIR/app/install.sh" ]]; then
-    say "  · herdr-app side (mod + programs.json), via app/install.sh:"
-    "$REPO_DIR/app/install.sh" install | sed 's/^/    /'
-  else
-    [ -d "$MOD_SRC" ] || die "missing monitor mod source: $MOD_SRC"
-    rm -rf "$MOD_DST"
-    cp -r "$MOD_SRC" "$MOD_DST"
-    say "  + $MOD_DST"
-    if [[ -f "$PROGRAMS_DST" ]]; then say "  · existing programs.json backed up to $BACKUP_DST"; fi
-    merge_programs_json
-  fi
+  [[ -x "$REPO_DIR/app/install.sh" ]] || die "missing app/install.sh"
+  say "  · herdr-app side (mod + programs.json), via app/install.sh:"
+  "$REPO_DIR/app/install.sh" install | sed 's/^/    /'
 
   # A stable PATH for the icon + launcher.
   case ":$PATH:" in
@@ -165,6 +136,7 @@ install_plugin() {
   if [[ -x "$PLUGIN_DIR/install.sh" ]]; then
     say "Installing the native DSH host plugin (optional path):"
     "$PLUGIN_DIR/install.sh"
+    touch "$DATA_DIR/.native-plugin-installed"
   else
     say "  · host plugin installer not present (plugin/install.sh); skipping"
   fi
@@ -180,24 +152,13 @@ uninstall() {
     "$REPO_DIR/app/install.sh" --uninstall | sed 's/^/  /' || true
   fi
   rm -rf "$MOD_DST"
-  if [[ -f "$BACKUP_DST" ]]; then
-    mv "$BACKUP_DST" "$PROGRAMS_DST"
-    say "  · programs.json restored from backup"
-  else
-    PROGRAMS_DST="$PROGRAMS_DST" node -e '
-      const fs = require("node:fs")
-      const path = process.env.PROGRAMS_DST
-      if (!fs.existsSync(path)) process.exit(0)
-      let doc
-      try { doc = JSON.parse(fs.readFileSync(path, "utf8")) } catch { process.exit(0) }
-      const programs = doc.programs || {}
-      for (const key of ["dsh-tui", "dsh-herdr"]) delete programs[key]
-      if (Object.keys(programs).length) doc.programs = programs
-      else delete doc.programs
-      fs.writeFileSync(path, JSON.stringify(doc, null, 2) + "\n")
-    '
-  fi
   say "  + removed files; DSH and Herdr themselves were not touched"
+  if [[ -f "$DATA_DIR/.native-plugin-installed" ]]; then
+    rm -rf -- "${DATA_DIR:?}/bin" "$DATA_DIR/app" "$DATA_DIR/install.sh" "$DATA_DIR/package.json"
+    say "  · native plugin files retained; plugin uninstall: $PLUGIN_DIR/install.sh --uninstall"
+  else
+    rm -rf -- "$DATA_DIR"
+  fi
 }
 
 usage() {
@@ -209,9 +170,6 @@ case "${1:-}" in
   --uninstall) uninstall; exit 0 ;;
 esac
 
-say "dsh-herdr installer"
-say ""
-install_files
 DO_PLUGIN=0; DO_START=0; DO_SYSTEMD=0
 for arg in "$@"; do
   case "$arg" in
@@ -221,6 +179,9 @@ for arg in "$@"; do
     *) die "unknown option: $arg (see --help)" ;;
   esac
 done
+say "dsh-herdr installer"
+say ""
+install_files
 [[ $DO_PLUGIN -eq 1 ]] && install_plugin
 [[ $DO_SYSTEMD -eq 1 ]] && install_systemd
 [[ $DO_START -eq 1 ]] && start_now

@@ -180,3 +180,17 @@ behind a browser-session cookie. See API-NOTES §1.4.
   (`herdr-app-ui`) with sample + live canonical files, not by these scripts.
 - Very large journals (>10 MiB decompressed) were not exercised; decode cost is
   O(file) per change (see README Gaps).
+
+## Regression checks
+
+`npm test` runs syntax checks, launcher fixtures, and Node regression tests for
+native plugin questions and permissions, private outputs, installer rollback,
+panel merging, transient reads, subprocess deadlines, and serialized polling.
+All session data and installation targets are temporary synthetic fixtures.
+
+`tests/install.test.mjs` also gives the synthetic Herdr probe an incorrect
+reported state and asserts that the probe fails.
+
+The live synthetic probe now runs `bin/dsh-herdr watch` and asserts both the
+Herdr OSC record and the state document at every transition. Run
+`monitor/tests/test-synthetic-herdr.sh` using the isolation settings above.

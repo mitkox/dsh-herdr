@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Match native question answers to DSH tool-result IDs and publish resolved
+  questions and permissions promptly, including plan review questions.
+- Keep one-shot session status consistent with the panel and merge panel rows
+  by session activity time rather than producer heartbeat time.
+- Preserve custom Herdr program entries during repeated installation and
+  removal; retain the installer payload so the installed uninstall command works.
+- Strip terminal controls from journal activity and keep state and feed/debug
+  files private.
+- Retry transient journal reads, tolerate null tool arguments, recognize
+  subcommand help, serialize polling, and bound Herdr subprocess lifetimes.
+- Record the daemon PID so uninstall can stop discovery before its reporters.
+- Assert the shipped launcher's OSC/state transitions in the synthetic probe,
+  with regression tests for installer, plugin, polling, and panel behavior.
+
+### Changed
+
+- Retain decoded journal lengths rather than whole histories between polls.
+- Skip unchanged reference state writes until the heartbeat is due.
+
 ## [0.2.0] — 2026-11-04
 
 First public release.
