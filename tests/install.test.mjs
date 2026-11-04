@@ -18,11 +18,14 @@ function fixture(t) {
     hc: 'echo \'{"terminals":[]}\'',
     'herdr-app': 'if [ "$1" = status ]; then echo \'{"errors":[]}\'; fi',
     systemctl: 'exit 0',
+    // The plugin installer needs a dsh binary even for --dry-run; CI has none.
+    dsh: 'exit 0',
   })) fs.writeFileSync(path.join(bin, name), `#!/bin/sh\n${body}\n`, { mode: 0o755 })
   const env = {
     ...process.env, HOME: home, HERDR_APP_HOME: app, DSH_HOME: path.join(home, 'dsh'),
     XDG_CONFIG_HOME: path.join(home, 'config'), XDG_DATA_HOME: path.join(home, 'data'),
     XDG_STATE_HOME: path.join(home, 'state'), PATH: bin + path.delimiter + process.env.PATH,
+    DSH_BIN: path.join(bin, 'dsh'),
     HC_TERMINAL_ID: '', HC_TERMINAL_SOCKET: '', HERDR_ENV: '', DSH_HERDR_STATE: '',
   }
   const run = (command, args = [], expected = 0) => {

@@ -65,9 +65,12 @@ install_files() {
     }
   '
   say "Installing dsh-herdr:"
-  install -d "$HOME_DIR/.local/bin" "$APP_HOME/mods" "$STATE_DIR"
-  # Keep the installer and optional plugin with the command after this checkout moves.
-  if [[ "$REPO_DIR" != "$DATA_DIR" ]]; then
+  install -d "$HOME_DIR/.local/bin" "$APP_HOME/mods" "$STATE_DIR" "$DATA_DIR"
+  # Keep the installer and optional plugin with the command after this checkout
+  # moves. Compare physical paths: on macOS $TMPDIR lives behind a symlink
+  # (/var -> /private/var), so a logical comparison would copy the payload onto
+  # itself and make `install` fail with "are the same file".
+  if [[ "$REPO_DIR" != "$(cd "$DATA_DIR" && pwd -P)" ]]; then
     install -d "$DATA_DIR/bin"
     install -m 0755 "$BIN_SRC" "$DATA_DIR/bin/dsh-herdr"
     install -m 0755 "$REPO_DIR/install.sh" "$DATA_DIR/install.sh"
