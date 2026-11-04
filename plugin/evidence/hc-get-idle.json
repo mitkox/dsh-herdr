@@ -1,0 +1,60 @@
+{
+    "address": "t8",
+    "argv": [
+        "env",
+        "DSH_HOME=/tmp/herdr-e2e/home",
+        "DSH_HERDR_STATE=/tmp/herdr-e2e/evidence/agents.json",
+        "DSH_PERMISSION_MODE=workspace-write",
+        "DEEPSEEK_BASE_URL=http://127.0.0.1:18000/v1",
+        "DEEPSEEK_API_KEY=mock-key",
+        "dsh",
+        "--profile",
+        "herdr-probe",
+        "--port",
+        "3181",
+        "--no-open"
+    ],
+    "cols": 200,
+    "created_ms": 1793793035441,
+    "cwd": "/tmp/herdr-e2e",
+    "die_with_parent": false,
+    "exit_code": null,
+    "finished_ms": null,
+    "foreground": {
+        "argv": [
+            "node",
+            "/usr/local/bin/dsh",
+            "--profile",
+            "herdr-probe",
+            "--port",
+            "3181",
+            "--no-open"
+        ],
+        "cwd": "/tmp/herdr-e2e",
+        "name": "node-MainThread",
+        "pid": 236027
+    },
+    "identity": "ghostty",
+    "keep": false,
+    "labels": {},
+    "name": "dsh-host",
+    "notify": true,
+    "parent": null,
+    "pid": 236027,
+    "reason": null,
+    "reported": true,
+    "rm": false,
+    "rows": 120,
+    "screen": "exact",
+    "signal": null,
+    "state": "live",
+    "status": {
+        "app": "dsh-tui",
+        "state": "idle",
+        "title": "PHASE ONE respond with the"
+    },
+    "status_ms": 1793793099953,
+    "template": null,
+    "title": "",
+    "turn": 1
+}

@@ -1,0 +1,3473 @@
+{
+  "probe": "probe_core.py",
+  "hc_version": "hc 0.1.17",
+  "session": "proto1",
+  "generated_at": "2026-11-04T13:41:53+0200",
+  "elapsed_s": 17.4,
+  "passed": 93,
+  "failed": 0,
+  "cases": [
+    {
+      "id": "state-idle",
+      "desc": "state=idle is applied to the root record",
+      "body_hex": "1b5d373530313b73746174653d69646c6507",
+      "body_repr": "b'\\x1b]7501;state=idle\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": "set"
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792495687,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-working",
+      "desc": "state=working is applied",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e6707",
+      "body_repr": "b'\\x1b]7501;state=working\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true,
+        "turn": 0
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792495752,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-done",
+      "desc": "state=done is applied",
+      "body_hex": "1b5d373530313b73746174653d646f6e6507",
+      "body_repr": "b'\\x1b]7501;state=done\\x07'",
+      "expected": {
+        "status": {
+          "state": "done"
+        },
+        "reported": true,
+        "turn": 0
+      },
+      "observed": {
+        "status": {
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792495819,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-blocked",
+      "desc": "state=blocked is applied",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b656407",
+      "body_repr": "b'\\x1b]7501;state=blocked\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked"
+        },
+        "reported": true,
+        "turn": 0
+      },
+      "observed": {
+        "status": {
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792495886,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-error",
+      "desc": "state=error is applied",
+      "body_hex": "1b5d373530313b73746174653d6572726f7207",
+      "body_repr": "b'\\x1b]7501;state=error\\x07'",
+      "expected": {
+        "status": {
+          "state": "error"
+        },
+        "reported": true,
+        "turn": 0
+      },
+      "observed": {
+        "status": {
+          "state": "error"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792495955,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-clear-fresh",
+      "desc": "state=clear with no records is accepted and leaves no status",
+      "body_hex": "1b5d373530313b73746174653d636c65617207",
+      "body_repr": "b'\\x1b]7501;state=clear\\x07'",
+      "expected": {
+        "status": null,
+        "records": {},
+        "reported": true,
+        "turn": 0
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-unknown",
+      "desc": "unknown state discards the whole report",
+      "body_hex": "1b5d373530313b73746174653d736c656570696e6707",
+      "body_repr": "b'\\x1b]7501;state=sleeping\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false,
+        "turn": 0
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-missing",
+      "desc": "report without state is discarded",
+      "body_hex": "1b5d373530313b6170703d636172676f07",
+      "body_repr": "b'\\x1b]7501;app=cargo\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-uppercase",
+      "desc": "state values are case-sensitive",
+      "body_hex": "1b5d373530313b73746174653d49444c4507",
+      "body_repr": "b'\\x1b]7501;state=IDLE\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-empty",
+      "desc": "empty state is discarded",
+      "body_hex": "1b5d373530313b73746174653d07",
+      "body_repr": "b'\\x1b]7501;state=\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-empty-body",
+      "desc": "an empty OSC 7501 body is discarded",
+      "body_hex": "1b5d373530313b07",
+      "body_repr": "b'\\x1b]7501;\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-with-terminator-st",
+      "desc": "ST (ESC \\\\) terminates a report too",
+      "body_hex": "1b5d373530313b73746174653d69646c651b5c",
+      "body_repr": "b'\\x1b]7501;state=idle\\x1b\\\\'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792496417,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-semicolon-payload",
+      "desc": "a semicolon-separated payload is not the wire format",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673b6170703d64736807",
+      "body_repr": "b'\\x1b]7501;state=working;app=dsh\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-json-payload",
+      "desc": "a JSON payload is not the wire format",
+      "body_hex": "1b5d373530313b7b227374617465223a22776f726b696e67227d07",
+      "body_repr": "b'\\x1b]7501;{\"state\":\"working\"}\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "state-bare-word",
+      "desc": "a bare state word without key= is not the wire format",
+      "body_hex": "1b5d373530313b776f726b696e6707",
+      "body_repr": "b'\\x1b]7501;working\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "app-dsh",
+      "desc": "app=dsh is stored verbatim",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d64736807",
+      "body_repr": "b'\\x1b]7501;state=idle:app=dsh\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle",
+          "app": "dsh"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "app": "dsh",
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792496688,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "app-dsh-tui",
+      "desc": "app=dsh-tui is stored verbatim (hyphen is a name byte)",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d6473682d74756907",
+      "body_repr": "b'\\x1b]7501;state=idle:app=dsh-tui\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle",
+          "app": "dsh-tui"
+        }
+      },
+      "observed": {
+        "status": {
+          "app": "dsh-tui",
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792496754,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "app-space",
+      "desc": "an app with a space violates the name set: skipped, report still applied",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d446565705365656b204861726e65737307",
+      "body_repr": "b'\\x1b]7501;state=idle:app=DeepSeek Harness\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792496822,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "app-slash",
+      "desc": "an app with / is skipped, report still applied",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d612f6207",
+      "body_repr": "b'\\x1b]7501;state=idle:app=a/b\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792496885,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "app-eq",
+      "desc": "an app with = is skipped, report still applied",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d613d6207",
+      "body_repr": "b'\\x1b]7501;state=idle:app=a=b\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792496951,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "app-32-bytes",
+      "desc": "app may be 32 bytes",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d616161616161616161616161616161616161616161616161616161616161616107",
+      "body_repr": "b'\\x1b]7501;state=idle:app=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle",
+          "app": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "app": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497016,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "app-33-bytes",
+      "desc": "33-byte app breaks a limit: whole report discarded",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d61616161616161616161616161616161616161616161616161616161616161616107",
+      "body_repr": "b'\\x1b]7501;state=idle:app=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "title-hello",
+      "desc": "title is base64 UTF-8, shown decoded",
+      "body_hex": "1b5d373530313b73746174653d69646c653a7469746c653d534756736247383d07",
+      "body_repr": "b'\\x1b]7501;state=idle:title=SGVsbG8=\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle",
+          "title": "Hello"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle",
+          "title": "Hello"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497145,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "title-unicode",
+      "desc": "decoded title may be Unicode",
+      "body_hex": "1b5d373530313b73746174653d69646c653a7469746c653d3561364a3559576f07",
+      "body_repr": "b'\\x1b]7501;state=idle:title=5a6J5YWo\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle",
+          "title": "安全"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle",
+          "title": "安全"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497211,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-question",
+      "desc": "msg is base64; 'Approve?' must be encoded",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a6d73673d51584277636d39325a54383d07",
+      "body_repr": "b'\\x1b]7501;state=blocked:msg=QXBwcm92ZT8=\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked",
+          "msg": "Approve?"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "msg": "Approve?",
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497277,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-plain-hello",
+      "desc": "plain msg=hello is not valid base64: whole report discarded",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a6d73673d68656c6c6f07",
+      "body_repr": "b'\\x1b]7501;state=done:msg=hello\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-plain-question",
+      "desc": "msg=Approve? has a byte outside the value alphabet: pair skipped, no msg",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a6d73673d417070726f76653f07",
+      "body_repr": "b'\\x1b]7501;state=blocked:msg=Approve?\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497408,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "title-plain-question",
+      "desc": "title=Hello? has a byte outside the value alphabet: pair skipped, no title",
+      "body_hex": "1b5d373530313b73746174653d69646c653a7469746c653d48656c6c6f3f07",
+      "body_repr": "b'\\x1b]7501;state=idle:title=Hello?\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497477,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-space",
+      "desc": "a space in a value skips that pair, report still applied",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a6d73673d61206207",
+      "body_repr": "b'\\x1b]7501;state=done:msg=a b\\x07'",
+      "expected": {
+        "status": {
+          "state": "done"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497542,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-paddingless",
+      "desc": "base64 padding on msg is optional",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a6d73673d55477868626707",
+      "body_repr": "b'\\x1b]7501;state=done:msg=UGxhbg\\x07'",
+      "expected": {
+        "status": {
+          "state": "done",
+          "msg": "Plan"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "msg": "Plan",
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497612,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-control-char",
+      "desc": "base64 text that decodes to a control character is discarded",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a6d73673d5951706907",
+      "body_repr": "b'\\x1b]7501;state=done:msg=YQpi\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-invalid-utf8",
+      "desc": "base64 text that decodes to invalid UTF-8 is discarded",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a6d73673d2f773d3d07",
+      "body_repr": "b'\\x1b]7501;state=done:msg=/w==\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "title-msg-empty",
+      "desc": "empty title/msg mean absent, report still applied",
+      "body_hex": "1b5d373530313b73746174653d69646c653a7469746c653d3a6d73673d07",
+      "body_repr": "b'\\x1b]7501;state=idle:title=:msg=\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497813,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-empty",
+      "desc": "empty progress means absent, report still applied",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d07",
+      "body_repr": "b'\\x1b]7501;state=working:progress=\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497879,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "kind-empty",
+      "desc": "empty kind means absent, report still applied",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a6b696e643d07",
+      "body_repr": "b'\\x1b]7501;state=blocked:kind=\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792497945,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "title-192-bytes",
+      "desc": "a 192-byte decoded title is the limit",
+      "body_hex": "1b5d373530313b73746174653d69646c653a7469746c653d5155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464207",
+      "body_repr": "b'\\x1b]7501;state=idle:title=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle",
+          "title": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle",
+          "title": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498010,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "title-193-bytes",
+      "desc": "a 193-byte decoded title is over the limit: discarded whole",
+      "body_hex": "1b5d373530313b73746174653d69646c653a7469746c653d5155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251554642515546425155464251513d3d07",
+      "body_repr": "b'\\x1b]7501;state=idle:title=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-2048-bytes",
+      "desc": "a 2048-byte decoded msg is the limit",
+      "body_hex": "<2755 bytes>",
+      "body_repr": "b'\\x1b]7501;state=idle:msg=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU'",
+      "expected": {
+        "status": {
+          "state": "idle",
+          "msg": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "msg": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498144,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "msg-2049-bytes",
+      "desc": "a 2049-byte decoded msg is over the limit: discarded whole",
+      "body_hex": "<2755 bytes>",
+      "body_repr": "b'\\x1b]7501;state=idle:msg=QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "kind-blocked-permission",
+      "desc": "kind=permission is stored with blocked",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a6b696e643d7065726d697373696f6e07",
+      "body_repr": "b'\\x1b]7501;state=blocked:kind=permission\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked",
+          "kind": "permission"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "kind": "permission",
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498281,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "kind-blocked-question",
+      "desc": "kind=question is stored with blocked",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a6b696e643d7175657374696f6e07",
+      "body_repr": "b'\\x1b]7501;state=blocked:kind=question\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked",
+          "kind": "question"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "kind": "question",
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498350,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "kind-blocked-auth",
+      "desc": "kind=auth is stored with blocked",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a6b696e643d6175746807",
+      "body_repr": "b'\\x1b]7501;state=blocked:kind=auth\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked",
+          "kind": "auth"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "kind": "auth",
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498415,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "kind-on-working",
+      "desc": "kind is ignored outside blocked",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a6b696e643d6175746807",
+      "body_repr": "b'\\x1b]7501;state=working:kind=auth\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498482,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "kind-on-done",
+      "desc": "kind is ignored outside blocked",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a6b696e643d6175746807",
+      "body_repr": "b'\\x1b]7501;state=done:kind=auth\\x07'",
+      "expected": {
+        "status": {
+          "state": "done"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498551,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "kind-unknown",
+      "desc": "an unknown kind reads as absent, report still applied",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a6b696e643d64616e636507",
+      "body_repr": "b'\\x1b]7501;state=blocked:kind=dance\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498619,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-42",
+      "desc": "progress is stored for working",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d343207",
+      "body_repr": "b'\\x1b]7501;state=working:progress=42\\x07'",
+      "expected": {
+        "status": {
+          "state": "working",
+          "progress": 42
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "progress": 42,
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498687,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-0",
+      "desc": "progress=0 is a value, not absent",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d3007",
+      "body_repr": "b'\\x1b]7501;state=working:progress=0\\x07'",
+      "expected": {
+        "status": {
+          "state": "working",
+          "progress": 0
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "progress": 0,
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498753,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-100",
+      "desc": "progress=100 is stored",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d31303007",
+      "body_repr": "b'\\x1b]7501;state=working:progress=100\\x07'",
+      "expected": {
+        "status": {
+          "state": "working",
+          "progress": 100
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "progress": 100,
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498819,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-101",
+      "desc": "progress over 100 reads as absent, report still applied",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d31303107",
+      "body_repr": "b'\\x1b]7501;state=working:progress=101\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498886,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-007",
+      "desc": "leading zeroes are decimal, not octal",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d30303707",
+      "body_repr": "b'\\x1b]7501;state=working:progress=007\\x07'",
+      "expected": {
+        "status": {
+          "state": "working",
+          "progress": 7
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "progress": 7,
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792498951,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-negative",
+      "desc": "negative progress reads as absent",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d2d3107",
+      "body_repr": "b'\\x1b]7501;state=working:progress=-1\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499017,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-float",
+      "desc": "fractional progress reads as absent",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a70726f67726573733d342e3507",
+      "body_repr": "b'\\x1b]7501;state=working:progress=4.5\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499084,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-on-idle",
+      "desc": "progress is ignored outside working/blocked",
+      "body_hex": "1b5d373530313b73746174653d69646c653a70726f67726573733d353007",
+      "body_repr": "b'\\x1b]7501;state=idle:progress=50\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499150,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-on-done",
+      "desc": "progress is ignored outside working/blocked",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a70726f67726573733d353007",
+      "body_repr": "b'\\x1b]7501;state=done:progress=50\\x07'",
+      "expected": {
+        "status": {
+          "state": "done"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499216,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-on-error",
+      "desc": "progress is ignored outside working/blocked",
+      "body_hex": "1b5d373530313b73746174653d6572726f723a70726f67726573733d353007",
+      "body_repr": "b'\\x1b]7501;state=error:progress=50\\x07'",
+      "expected": {
+        "status": {
+          "state": "error"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "error"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499281,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "progress-blocked",
+      "desc": "progress is stored for blocked",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a70726f67726573733d353007",
+      "body_repr": "b'\\x1b]7501;state=blocked:progress=50\\x07'",
+      "expected": {
+        "status": {
+          "state": "blocked",
+          "progress": 50
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "progress": 50,
+          "state": "blocked"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499348,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "key-unknown-skipped",
+      "desc": "unknown keys are ignored, report applied",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6675747572653d79657307",
+      "body_repr": "b'\\x1b]7501;state=idle:future=yes\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499416,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "key-16-bytes",
+      "desc": "a 16-byte key (known or not) is accepted",
+      "body_hex": "1b5d373530313b73746174653d69646c653a616161616161616161616161616161613d3107",
+      "body_repr": "b'\\x1b]7501;state=idle:aaaaaaaaaaaaaaaa=1\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499484,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "key-17-bytes",
+      "desc": "a 17-byte key breaks a limit: discarded whole",
+      "body_hex": "1b5d373530313b73746174653d69646c653a61616161616161616161616161616161613d3107",
+      "body_repr": "b'\\x1b]7501;state=idle:aaaaaaaaaaaaaaaaa=1\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "pair-no-equals",
+      "desc": "a pair without = is skipped, report applied",
+      "body_hex": "1b5d373530313b6a756e6b3a73746174653d776f726b696e6707",
+      "body_repr": "b'\\x1b]7501;junk:state=working\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499620,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "pair-empty-key",
+      "desc": "a pair with an empty key is skipped, report applied",
+      "body_hex": "1b5d373530313b3d783a73746174653d776f726b696e6707",
+      "body_repr": "b'\\x1b]7501;=x:state=working\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499686,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "whitespace-trimmed",
+      "desc": "whitespace around keys and values is removed",
+      "body_hex": "1b5d373530313b207374617465203d20776f726b696e67203a09617070203d20636172676f200907",
+      "body_repr": "b'\\x1b]7501; state = working :\\tapp = cargo \\t\\x07'",
+      "expected": {
+        "status": {
+          "state": "working",
+          "app": "cargo"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "app": "cargo",
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499753,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "last-wins",
+      "desc": "a repeated key keeps its last value",
+      "body_hex": "1b5d373530313b73746174653d69646c653a6170703d613a73746174653d646f6e653a6170703d6207",
+      "body_repr": "b'\\x1b]7501;state=idle:app=a:state=done:app=b\\x07'",
+      "expected": {
+        "status": {
+          "state": "done",
+          "app": "b"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "app": "b",
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499818,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "two-reports-one-write",
+      "desc": "two OSC 7501 reports in one write are both applied in order",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e67071b5d373530313b73746174653d646f6e6507",
+      "body_repr": "b'\\x1b]7501;state=working\\x07\\x1b]7501;state=done\\x07'",
+      "expected": {
+        "status": {
+          "state": "done"
+        },
+        "reported": true,
+        "turn": 1
+      },
+      "observed": {
+        "status": {
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 1,
+        "status_ms": 1793792499884,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "report-then-text",
+      "desc": "text after a report does not disturb it",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e670768656c6c6f",
+      "body_repr": "b'\\x1b]7501;state=working\\x07hello'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792499949,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "split-across-writes",
+      "desc": "a report split across two writes is reassembled (no marker between chunks!)",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e6707",
+      "body_repr": "b'\\x1b]7501;state=working\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792500163,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-child",
+      "desc": "an id addresses a child record; the root status stays absent",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a69643d6275696c6407",
+      "body_repr": "b'\\x1b]7501;state=working:id=build\\x07'",
+      "expected": {
+        "status": null,
+        "records": {
+          "build": {
+            "state": "working"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": "null"
+      },
+      "observed": {
+        "status": null,
+        "records": {
+          "build": {
+            "state": "working"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-child-app",
+      "desc": "a child record stores its own app",
+      "body_hex": "1b5d373530313b73746174653d626c6f636b65643a69643d6275696c642f746573743a6170703d6368696c6407",
+      "body_repr": "b'\\x1b]7501;state=blocked:id=build/test:app=child\\x07'",
+      "expected": {
+        "status": null,
+        "records": {
+          "build/test": {
+            "state": "blocked",
+            "app": "child"
+          }
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": null,
+        "records": {
+          "build/test": {
+            "app": "child",
+            "state": "blocked"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-parent-not-required",
+      "desc": "a child id may name a parent that was never reported",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a69643d6465706c6f792f75732d6561737407",
+      "body_repr": "b'\\x1b]7501;state=working:id=deploy/us-east\\x07'",
+      "expected": {
+        "status": null,
+        "records": {
+          "deploy/us-east": {
+            "state": "working"
+          }
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": null,
+        "records": {
+          "deploy/us-east": {
+            "state": "working"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-empty",
+      "desc": "an empty id is an invalid id: discards the whole report (0.1.17)",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d07",
+      "body_repr": "b'\\x1b]7501;state=idle:id=\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-invalid-slashes",
+      "desc": "an invalid id (a//b) discards the report",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d612f2f6207",
+      "body_repr": "b'\\x1b]7501;state=idle:id=a//b\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-invalid-leading-slash",
+      "desc": "an invalid id (/a) discards the report",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d2f6107",
+      "body_repr": "b'\\x1b]7501;state=idle:id=/a\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-invalid-trailing-slash",
+      "desc": "an invalid id (a/) discards the report",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d612f07",
+      "body_repr": "b'\\x1b]7501;state=idle:id=a/\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-invalid-char-at",
+      "desc": "0.1.17: an id byte outside the value alphabet (@) is skipped => the report hits the ROOT record",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d61406207",
+      "body_repr": "b'\\x1b]7501;state=idle:id=a@b\\x07'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792500810,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-invalid-char-space",
+      "desc": "0.1.17: an id with a space is skipped => the report hits the ROOT record",
+      "body_hex": "1b5d373530313b73746174653d646f6e653a69643d61206207",
+      "body_repr": "b'\\x1b]7501;state=done:id=a b\\x07'",
+      "expected": {
+        "status": {
+          "state": "done"
+        },
+        "records": {},
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "done"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792500877,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-invalid-char-comma",
+      "desc": "a comma is inside the value alphabet, so the id reaches validation: discarded",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d612c6207",
+      "body_repr": "b'\\x1b]7501;state=idle:id=a,b\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-segment-32",
+      "desc": "a 32-byte id segment is allowed",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d616161616161616161616161616161616161616161616161616161616161616107",
+      "body_repr": "b'\\x1b]7501;state=idle:id=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x07'",
+      "expected": {
+        "status": null,
+        "records": {
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": {
+            "state": "idle"
+          }
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": null,
+        "records": {
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": {
+            "state": "idle"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-segment-33",
+      "desc": "a 33-byte id segment is over the limit: discarded",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d61616161616161616161616161616161616161616161616161616161616161616107",
+      "body_repr": "b'\\x1b]7501;state=idle:id=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-depth-8",
+      "desc": "8 id levels are allowed",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d612f612f612f612f612f612f612f6107",
+      "body_repr": "b'\\x1b]7501;state=idle:id=a/a/a/a/a/a/a/a\\x07'",
+      "expected": {
+        "status": null,
+        "records": {
+          "a/a/a/a/a/a/a/a": {
+            "state": "idle"
+          }
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": null,
+        "records": {
+          "a/a/a/a/a/a/a/a": {
+            "state": "idle"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-depth-9",
+      "desc": "9 id levels are over the limit: discarded",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d612f612f612f612f612f612f612f612f6107",
+      "body_repr": "b'\\x1b]7501;state=idle:id=a/a/a/a/a/a/a/a/a\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "id-total-131",
+      "desc": "an id longer than 128 bytes is discarded",
+      "body_hex": "1b5d373530313b73746174653d69646c653a69643d61616161616161616161616161616161616161616161616161616161616161612f61616161616161616161616161616161616161616161616161616161616161612f61616161616161616161616161616161616161616161616161616161616161612f616161616161616161616161616161616161616161616161616161616161616107",
+      "body_repr": "b'\\x1b]7501;state=idle:id=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\x07'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "clear-child",
+      "desc": "state=clear:id=X removes X and its children, not similar ids",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a6170703d647368071b5d373530313b73746174653d776f726b696e673a69643d6275696c64071b5d373530313b73746174653d776f726b696e673a69643d6275696c642f74657374071b5d373530313b73746174653d776f726b696e673a69643d6275696c6478071b5d373530313b73746174653d776f726b696e673a69643d6465706c6f79071b5d373530313b73746174653d636c6561723a69643d6275696c6407",
+      "body_repr": "b'\\x1b]7501;state=working:app=dsh\\x07\\x1b]7501;state=working:id=build\\x07\\x1b]7501;state=working:id=build/test\\x07\\x1b]7501;state=working:id=buildx\\x07\\x1b]7501;state=working:id=deploy\\x07\\x1b]7501;state=clear:id=build\\x07'",
+      "expected": {
+        "status": {
+          "state": "working",
+          "app": "dsh"
+        },
+        "records": {
+          "buildx": {
+            "state": "working"
+          },
+          "deploy": {
+            "state": "working"
+          }
+        },
+        "reported": true,
+        "turn": 0
+      },
+      "observed": {
+        "status": {
+          "app": "dsh",
+          "state": "working"
+        },
+        "records": {
+          "buildx": {
+            "state": "working"
+          },
+          "deploy": {
+            "state": "working"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792501344,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "clear-root-with-records",
+      "desc": "state=clear with no id removes the root and every record",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a69643d6275696c64071b5d373530313b73746174653d646f6e653a69643d6275696c642f74657374071b5d373530313b73746174653d636c65617207",
+      "body_repr": "b'\\x1b]7501;state=working:id=build\\x07\\x1b]7501;state=done:id=build/test\\x07\\x1b]7501;state=clear\\x07'",
+      "expected": {
+        "status": null,
+        "records": {},
+        "reported": true,
+        "turn": 0
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "clear-invalid-id-keeps-records",
+      "desc": "an invalid clear id never falls back to the root record",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e673a6170703d647368071b5d373530313b73746174653d776f726b696e673a69643d6275696c64071b5d373530313b73746174653d636c6561723a69643d612f2f6207",
+      "body_repr": "b'\\x1b]7501;state=working:app=dsh\\x07\\x1b]7501;state=working:id=build\\x07\\x1b]7501;state=clear:id=a//b\\x07'",
+      "expected": {
+        "status": {
+          "state": "working",
+          "app": "dsh"
+        },
+        "records": {
+          "build": {
+            "state": "working"
+          }
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "app": "dsh",
+          "state": "working"
+        },
+        "records": {
+          "build": {
+            "state": "working"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792502462,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "child-does-not-end-turn",
+      "desc": "a child record leaving working does not raise the turn",
+      "body_hex": "1b5d373530313b73746174653d776f726b696e67071b5d373530313b73746174653d776f726b696e673a69643d6275696c64071b5d373530313b73746174653d646f6e653a69643d6275696c6407",
+      "body_repr": "b'\\x1b]7501;state=working\\x07\\x1b]7501;state=working:id=build\\x07\\x1b]7501;state=done:id=build\\x07'",
+      "expected": {
+        "status": {
+          "state": "working"
+        },
+        "records": {
+          "build": {
+            "state": "done"
+          }
+        },
+        "turn": 0,
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "working"
+        },
+        "records": {
+          "build": {
+            "state": "done"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792502787,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "body-4087-bytes",
+      "desc": "a 4087-byte body (the parser's max) is accepted",
+      "body_hex": "<4095 bytes>",
+      "body_repr": "b'\\x1b]7501;state=idle:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'",
+      "expected": {
+        "status": {
+          "state": "idle"
+        },
+        "reported": true
+      },
+      "observed": {
+        "status": {
+          "state": "idle"
+        },
+        "records": {},
+        "reported": true,
+        "turn": 0,
+        "status_ms": 1793792503112,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "body-4088-bytes",
+      "desc": "a 4088-byte body is rejected",
+      "body_hex": "<4096 bytes>",
+      "body_repr": "b'\\x1b]7501;state=idle:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "body-4090-bytes",
+      "desc": "a body well over the max is rejected",
+      "body_hex": "<4098 bytes>",
+      "body_repr": "b'\\x1b]7501;state=idle:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'",
+      "expected": {
+        "status": null,
+        "reported": false
+      },
+      "observed": {
+        "status": null,
+        "records": {},
+        "reported": false,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "records-cap-256",
+      "desc": "child-record cap: BTreeMap-first eviction when len >= MAX_RECORDS-1 (steady state 255)",
+      "body_hex": null,
+      "body_repr": "<257 steps>",
+      "expected": {
+        "reported": true
+      },
+      "observed": {
+        "status": null,
+        "records": {
+          "r002": {
+            "state": "idle"
+          },
+          "r003": {
+            "state": "idle"
+          },
+          "r004": {
+            "state": "idle"
+          },
+          "r005": {
+            "state": "idle"
+          },
+          "r006": {
+            "state": "idle"
+          },
+          "r007": {
+            "state": "idle"
+          },
+          "r008": {
+            "state": "idle"
+          },
+          "r009": {
+            "state": "idle"
+          },
+          "r010": {
+            "state": "idle"
+          },
+          "r011": {
+            "state": "idle"
+          },
+          "r012": {
+            "state": "idle"
+          },
+          "r013": {
+            "state": "idle"
+          },
+          "r014": {
+            "state": "idle"
+          },
+          "r015": {
+            "state": "idle"
+          },
+          "r016": {
+            "state": "idle"
+          },
+          "r017": {
+            "state": "idle"
+          },
+          "r018": {
+            "state": "idle"
+          },
+          "r019": {
+            "state": "idle"
+          },
+          "r020": {
+            "state": "idle"
+          },
+          "r021": {
+            "state": "idle"
+          },
+          "r022": {
+            "state": "idle"
+          },
+          "r023": {
+            "state": "idle"
+          },
+          "r024": {
+            "state": "idle"
+          },
+          "r025": {
+            "state": "idle"
+          },
+          "r026": {
+            "state": "idle"
+          },
+          "r027": {
+            "state": "idle"
+          },
+          "r028": {
+            "state": "idle"
+          },
+          "r029": {
+            "state": "idle"
+          },
+          "r030": {
+            "state": "idle"
+          },
+          "r031": {
+            "state": "idle"
+          },
+          "r032": {
+            "state": "idle"
+          },
+          "r033": {
+            "state": "idle"
+          },
+          "r034": {
+            "state": "idle"
+          },
+          "r035": {
+            "state": "idle"
+          },
+          "r036": {
+            "state": "idle"
+          },
+          "r037": {
+            "state": "idle"
+          },
+          "r038": {
+            "state": "idle"
+          },
+          "r039": {
+            "state": "idle"
+          },
+          "r040": {
+            "state": "idle"
+          },
+          "r041": {
+            "state": "idle"
+          },
+          "r042": {
+            "state": "idle"
+          },
+          "r043": {
+            "state": "idle"
+          },
+          "r044": {
+            "state": "idle"
+          },
+          "r045": {
+            "state": "idle"
+          },
+          "r046": {
+            "state": "idle"
+          },
+          "r047": {
+            "state": "idle"
+          },
+          "r048": {
+            "state": "idle"
+          },
+          "r049": {
+            "state": "idle"
+          },
+          "r050": {
+            "state": "idle"
+          },
+          "r051": {
+            "state": "idle"
+          },
+          "r052": {
+            "state": "idle"
+          },
+          "r053": {
+            "state": "idle"
+          },
+          "r054": {
+            "state": "idle"
+          },
+          "r055": {
+            "state": "idle"
+          },
+          "r056": {
+            "state": "idle"
+          },
+          "r057": {
+            "state": "idle"
+          },
+          "r058": {
+            "state": "idle"
+          },
+          "r059": {
+            "state": "idle"
+          },
+          "r060": {
+            "state": "idle"
+          },
+          "r061": {
+            "state": "idle"
+          },
+          "r062": {
+            "state": "idle"
+          },
+          "r063": {
+            "state": "idle"
+          },
+          "r064": {
+            "state": "idle"
+          },
+          "r065": {
+            "state": "idle"
+          },
+          "r066": {
+            "state": "idle"
+          },
+          "r067": {
+            "state": "idle"
+          },
+          "r068": {
+            "state": "idle"
+          },
+          "r069": {
+            "state": "idle"
+          },
+          "r070": {
+            "state": "idle"
+          },
+          "r071": {
+            "state": "idle"
+          },
+          "r072": {
+            "state": "idle"
+          },
+          "r073": {
+            "state": "idle"
+          },
+          "r074": {
+            "state": "idle"
+          },
+          "r075": {
+            "state": "idle"
+          },
+          "r076": {
+            "state": "idle"
+          },
+          "r077": {
+            "state": "idle"
+          },
+          "r078": {
+            "state": "idle"
+          },
+          "r079": {
+            "state": "idle"
+          },
+          "r080": {
+            "state": "idle"
+          },
+          "r081": {
+            "state": "idle"
+          },
+          "r082": {
+            "state": "idle"
+          },
+          "r083": {
+            "state": "idle"
+          },
+          "r084": {
+            "state": "idle"
+          },
+          "r085": {
+            "state": "idle"
+          },
+          "r086": {
+            "state": "idle"
+          },
+          "r087": {
+            "state": "idle"
+          },
+          "r088": {
+            "state": "idle"
+          },
+          "r089": {
+            "state": "idle"
+          },
+          "r090": {
+            "state": "idle"
+          },
+          "r091": {
+            "state": "idle"
+          },
+          "r092": {
+            "state": "idle"
+          },
+          "r093": {
+            "state": "idle"
+          },
+          "r094": {
+            "state": "idle"
+          },
+          "r095": {
+            "state": "idle"
+          },
+          "r096": {
+            "state": "idle"
+          },
+          "r097": {
+            "state": "idle"
+          },
+          "r098": {
+            "state": "idle"
+          },
+          "r099": {
+            "state": "idle"
+          },
+          "r100": {
+            "state": "idle"
+          },
+          "r101": {
+            "state": "idle"
+          },
+          "r102": {
+            "state": "idle"
+          },
+          "r103": {
+            "state": "idle"
+          },
+          "r104": {
+            "state": "idle"
+          },
+          "r105": {
+            "state": "idle"
+          },
+          "r106": {
+            "state": "idle"
+          },
+          "r107": {
+            "state": "idle"
+          },
+          "r108": {
+            "state": "idle"
+          },
+          "r109": {
+            "state": "idle"
+          },
+          "r110": {
+            "state": "idle"
+          },
+          "r111": {
+            "state": "idle"
+          },
+          "r112": {
+            "state": "idle"
+          },
+          "r113": {
+            "state": "idle"
+          },
+          "r114": {
+            "state": "idle"
+          },
+          "r115": {
+            "state": "idle"
+          },
+          "r116": {
+            "state": "idle"
+          },
+          "r117": {
+            "state": "idle"
+          },
+          "r118": {
+            "state": "idle"
+          },
+          "r119": {
+            "state": "idle"
+          },
+          "r120": {
+            "state": "idle"
+          },
+          "r121": {
+            "state": "idle"
+          },
+          "r122": {
+            "state": "idle"
+          },
+          "r123": {
+            "state": "idle"
+          },
+          "r124": {
+            "state": "idle"
+          },
+          "r125": {
+            "state": "idle"
+          },
+          "r126": {
+            "state": "idle"
+          },
+          "r127": {
+            "state": "idle"
+          },
+          "r128": {
+            "state": "idle"
+          },
+          "r129": {
+            "state": "idle"
+          },
+          "r130": {
+            "state": "idle"
+          },
+          "r131": {
+            "state": "idle"
+          },
+          "r132": {
+            "state": "idle"
+          },
+          "r133": {
+            "state": "idle"
+          },
+          "r134": {
+            "state": "idle"
+          },
+          "r135": {
+            "state": "idle"
+          },
+          "r136": {
+            "state": "idle"
+          },
+          "r137": {
+            "state": "idle"
+          },
+          "r138": {
+            "state": "idle"
+          },
+          "r139": {
+            "state": "idle"
+          },
+          "r140": {
+            "state": "idle"
+          },
+          "r141": {
+            "state": "idle"
+          },
+          "r142": {
+            "state": "idle"
+          },
+          "r143": {
+            "state": "idle"
+          },
+          "r144": {
+            "state": "idle"
+          },
+          "r145": {
+            "state": "idle"
+          },
+          "r146": {
+            "state": "idle"
+          },
+          "r147": {
+            "state": "idle"
+          },
+          "r148": {
+            "state": "idle"
+          },
+          "r149": {
+            "state": "idle"
+          },
+          "r150": {
+            "state": "idle"
+          },
+          "r151": {
+            "state": "idle"
+          },
+          "r152": {
+            "state": "idle"
+          },
+          "r153": {
+            "state": "idle"
+          },
+          "r154": {
+            "state": "idle"
+          },
+          "r155": {
+            "state": "idle"
+          },
+          "r156": {
+            "state": "idle"
+          },
+          "r157": {
+            "state": "idle"
+          },
+          "r158": {
+            "state": "idle"
+          },
+          "r159": {
+            "state": "idle"
+          },
+          "r160": {
+            "state": "idle"
+          },
+          "r161": {
+            "state": "idle"
+          },
+          "r162": {
+            "state": "idle"
+          },
+          "r163": {
+            "state": "idle"
+          },
+          "r164": {
+            "state": "idle"
+          },
+          "r165": {
+            "state": "idle"
+          },
+          "r166": {
+            "state": "idle"
+          },
+          "r167": {
+            "state": "idle"
+          },
+          "r168": {
+            "state": "idle"
+          },
+          "r169": {
+            "state": "idle"
+          },
+          "r170": {
+            "state": "idle"
+          },
+          "r171": {
+            "state": "idle"
+          },
+          "r172": {
+            "state": "idle"
+          },
+          "r173": {
+            "state": "idle"
+          },
+          "r174": {
+            "state": "idle"
+          },
+          "r175": {
+            "state": "idle"
+          },
+          "r176": {
+            "state": "idle"
+          },
+          "r177": {
+            "state": "idle"
+          },
+          "r178": {
+            "state": "idle"
+          },
+          "r179": {
+            "state": "idle"
+          },
+          "r180": {
+            "state": "idle"
+          },
+          "r181": {
+            "state": "idle"
+          },
+          "r182": {
+            "state": "idle"
+          },
+          "r183": {
+            "state": "idle"
+          },
+          "r184": {
+            "state": "idle"
+          },
+          "r185": {
+            "state": "idle"
+          },
+          "r186": {
+            "state": "idle"
+          },
+          "r187": {
+            "state": "idle"
+          },
+          "r188": {
+            "state": "idle"
+          },
+          "r189": {
+            "state": "idle"
+          },
+          "r190": {
+            "state": "idle"
+          },
+          "r191": {
+            "state": "idle"
+          },
+          "r192": {
+            "state": "idle"
+          },
+          "r193": {
+            "state": "idle"
+          },
+          "r194": {
+            "state": "idle"
+          },
+          "r195": {
+            "state": "idle"
+          },
+          "r196": {
+            "state": "idle"
+          },
+          "r197": {
+            "state": "idle"
+          },
+          "r198": {
+            "state": "idle"
+          },
+          "r199": {
+            "state": "idle"
+          },
+          "r200": {
+            "state": "idle"
+          },
+          "r201": {
+            "state": "idle"
+          },
+          "r202": {
+            "state": "idle"
+          },
+          "r203": {
+            "state": "idle"
+          },
+          "r204": {
+            "state": "idle"
+          },
+          "r205": {
+            "state": "idle"
+          },
+          "r206": {
+            "state": "idle"
+          },
+          "r207": {
+            "state": "idle"
+          },
+          "r208": {
+            "state": "idle"
+          },
+          "r209": {
+            "state": "idle"
+          },
+          "r210": {
+            "state": "idle"
+          },
+          "r211": {
+            "state": "idle"
+          },
+          "r212": {
+            "state": "idle"
+          },
+          "r213": {
+            "state": "idle"
+          },
+          "r214": {
+            "state": "idle"
+          },
+          "r215": {
+            "state": "idle"
+          },
+          "r216": {
+            "state": "idle"
+          },
+          "r217": {
+            "state": "idle"
+          },
+          "r218": {
+            "state": "idle"
+          },
+          "r219": {
+            "state": "idle"
+          },
+          "r220": {
+            "state": "idle"
+          },
+          "r221": {
+            "state": "idle"
+          },
+          "r222": {
+            "state": "idle"
+          },
+          "r223": {
+            "state": "idle"
+          },
+          "r224": {
+            "state": "idle"
+          },
+          "r225": {
+            "state": "idle"
+          },
+          "r226": {
+            "state": "idle"
+          },
+          "r227": {
+            "state": "idle"
+          },
+          "r228": {
+            "state": "idle"
+          },
+          "r229": {
+            "state": "idle"
+          },
+          "r230": {
+            "state": "idle"
+          },
+          "r231": {
+            "state": "idle"
+          },
+          "r232": {
+            "state": "idle"
+          },
+          "r233": {
+            "state": "idle"
+          },
+          "r234": {
+            "state": "idle"
+          },
+          "r235": {
+            "state": "idle"
+          },
+          "r236": {
+            "state": "idle"
+          },
+          "r237": {
+            "state": "idle"
+          },
+          "r238": {
+            "state": "idle"
+          },
+          "r239": {
+            "state": "idle"
+          },
+          "r240": {
+            "state": "idle"
+          },
+          "r241": {
+            "state": "idle"
+          },
+          "r242": {
+            "state": "idle"
+          },
+          "r243": {
+            "state": "idle"
+          },
+          "r244": {
+            "state": "idle"
+          },
+          "r245": {
+            "state": "idle"
+          },
+          "r246": {
+            "state": "idle"
+          },
+          "r247": {
+            "state": "idle"
+          },
+          "r248": {
+            "state": "idle"
+          },
+          "r249": {
+            "state": "idle"
+          },
+          "r250": {
+            "state": "idle"
+          },
+          "r251": {
+            "state": "idle"
+          },
+          "r252": {
+            "state": "idle"
+          },
+          "r253": {
+            "state": "idle"
+          },
+          "r254": {
+            "state": "idle"
+          },
+          "r255": {
+            "state": "idle"
+          },
+          "r999": {
+            "state": "idle"
+          }
+        },
+        "reported": true,
+        "turn": 0,
+        "status_ms": null,
+        "state": "live"
+      },
+      "pass": true,
+      "failures": []
+    }
+  ],
+  "additional": [
+    {
+      "id": "e2e-fake-dsh-agent",
+      "desc": "fake dsh-tui agent end to end: idle -> working -> blocked(permission) -> done -> idle",
+      "steps": [
+        {
+          "marker": "A-IDLE",
+          "observed": {
+            "status": {
+              "app": "dsh-tui",
+              "msg": "waiting for a task",
+              "state": "idle",
+              "title": "DSH · main"
+            },
+            "records": {},
+            "reported": true,
+            "turn": 0,
+            "status_ms": 1793792503438,
+            "state": "live",
+            "_get": {
+              "address": "t16k",
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                "--auto"
+              ],
+              "cols": 200,
+              "created_ms": 1793792503430,
+              "cwd": "/home/you/src/dsh-research/probes",
+              "die_with_parent": false,
+              "exit_code": null,
+              "finished_ms": null,
+              "identity": "ghostty",
+              "keep": false,
+              "labels": {},
+              "name": "e2e",
+              "notify": true,
+              "parent": null,
+              "pid": 159111,
+              "reason": null,
+              "reported": true,
+              "rm": false,
+              "rows": 120,
+              "screen": "exact",
+              "signal": null,
+              "state": "live",
+              "status": {
+                "app": "dsh-tui",
+                "msg": "waiting for a task",
+                "state": "idle",
+                "title": "DSH · main"
+              },
+              "status_ms": 1793792503438,
+              "template": null,
+              "title": "",
+              "turn": 0
+            }
+          }
+        },
+        {
+          "marker": "B-WORKING",
+          "observed": {
+            "status": {
+              "app": "dsh-tui",
+              "msg": "running a turn",
+              "state": "working",
+              "title": "DSH · main"
+            },
+            "records": {},
+            "reported": true,
+            "turn": 0,
+            "status_ms": 1793792503938,
+            "state": "live",
+            "_get": {
+              "address": "t16k",
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                "--auto"
+              ],
+              "cols": 200,
+              "created_ms": 1793792503430,
+              "cwd": "/home/you/src/dsh-research/probes",
+              "die_with_parent": false,
+              "exit_code": null,
+              "finished_ms": null,
+              "foreground": {
+                "argv": [
+                  "python3",
+                  "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                  "--auto"
+                ],
+                "cwd": "/home/you/src/dsh-research/probes",
+                "name": "python3",
+                "pid": 159111
+              },
+              "identity": "ghostty",
+              "keep": false,
+              "labels": {},
+              "name": "e2e",
+              "notify": true,
+              "parent": null,
+              "pid": 159111,
+              "reason": null,
+              "reported": true,
+              "rm": false,
+              "rows": 120,
+              "screen": "exact",
+              "signal": null,
+              "state": "live",
+              "status": {
+                "app": "dsh-tui",
+                "msg": "running a turn",
+                "state": "working",
+                "title": "DSH · main"
+              },
+              "status_ms": 1793792503938,
+              "template": null,
+              "title": "",
+              "turn": 0
+            }
+          }
+        },
+        {
+          "marker": "C-BLOCKED",
+          "observed": {
+            "status": {
+              "app": "dsh-tui",
+              "kind": "permission",
+              "msg": "Approve? run: rm -rf build",
+              "state": "blocked",
+              "title": "DSH · main"
+            },
+            "records": {},
+            "reported": true,
+            "turn": 1,
+            "status_ms": 1793792504438,
+            "state": "live",
+            "_get": {
+              "address": "t16k",
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                "--auto"
+              ],
+              "cols": 200,
+              "created_ms": 1793792503430,
+              "cwd": "/home/you/src/dsh-research/probes",
+              "die_with_parent": false,
+              "exit_code": null,
+              "finished_ms": null,
+              "foreground": {
+                "argv": [
+                  "python3",
+                  "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                  "--auto"
+                ],
+                "cwd": "/home/you/src/dsh-research/probes",
+                "name": "python3",
+                "pid": 159111
+              },
+              "identity": "ghostty",
+              "keep": false,
+              "labels": {},
+              "name": "e2e",
+              "notify": true,
+              "parent": null,
+              "pid": 159111,
+              "reason": null,
+              "reported": true,
+              "rm": false,
+              "rows": 120,
+              "screen": "exact",
+              "signal": null,
+              "state": "live",
+              "status": {
+                "app": "dsh-tui",
+                "kind": "permission",
+                "msg": "Approve? run: rm -rf build",
+                "state": "blocked",
+                "title": "DSH · main"
+              },
+              "status_ms": 1793792504438,
+              "template": null,
+              "title": "",
+              "turn": 1
+            }
+          }
+        },
+        {
+          "marker": "D-DONE",
+          "observed": {
+            "status": {
+              "app": "dsh-tui",
+              "msg": "turn finished: 3 edits",
+              "state": "done",
+              "title": "DSH · main"
+            },
+            "records": {},
+            "reported": true,
+            "turn": 1,
+            "status_ms": 1793792504938,
+            "state": "live",
+            "_get": {
+              "address": "t16k",
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                "--auto"
+              ],
+              "cols": 200,
+              "created_ms": 1793792503430,
+              "cwd": "/home/you/src/dsh-research/probes",
+              "die_with_parent": false,
+              "exit_code": null,
+              "finished_ms": null,
+              "foreground": {
+                "argv": [
+                  "python3",
+                  "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                  "--auto"
+                ],
+                "cwd": "/home/you/src/dsh-research/probes",
+                "name": "python3",
+                "pid": 159111
+              },
+              "identity": "ghostty",
+              "keep": false,
+              "labels": {},
+              "name": "e2e",
+              "notify": true,
+              "parent": null,
+              "pid": 159111,
+              "reason": null,
+              "reported": true,
+              "rm": false,
+              "rows": 120,
+              "screen": "exact",
+              "signal": null,
+              "state": "live",
+              "status": {
+                "app": "dsh-tui",
+                "msg": "turn finished: 3 edits",
+                "state": "done",
+                "title": "DSH · main"
+              },
+              "status_ms": 1793792504938,
+              "template": null,
+              "title": "",
+              "turn": 1
+            }
+          }
+        },
+        {
+          "marker": "E-IDLE",
+          "observed": {
+            "status": {
+              "app": "dsh-tui",
+              "msg": "ready for the next task",
+              "state": "idle",
+              "title": "DSH · main"
+            },
+            "records": {},
+            "reported": true,
+            "turn": 1,
+            "status_ms": 1793792505438,
+            "state": "live",
+            "_get": {
+              "address": "t16k",
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                "--auto"
+              ],
+              "cols": 200,
+              "created_ms": 1793792503430,
+              "cwd": "/home/you/src/dsh-research/probes",
+              "die_with_parent": false,
+              "exit_code": null,
+              "finished_ms": null,
+              "foreground": {
+                "argv": [
+                  "python3",
+                  "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+                  "--auto"
+                ],
+                "cwd": "/home/you/src/dsh-research/probes",
+                "name": "python3",
+                "pid": 159111
+              },
+              "identity": "ghostty",
+              "keep": false,
+              "labels": {},
+              "name": "e2e",
+              "notify": true,
+              "parent": null,
+              "pid": 159111,
+              "reason": null,
+              "reported": true,
+              "rm": false,
+              "rows": 120,
+              "screen": "exact",
+              "signal": null,
+              "state": "live",
+              "status": {
+                "app": "dsh-tui",
+                "msg": "ready for the next task",
+                "state": "idle",
+                "title": "DSH · main"
+              },
+              "status_ms": 1793792505438,
+              "template": null,
+              "title": "",
+              "turn": 1
+            }
+          }
+        }
+      ],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "turn-semantics",
+      "desc": "turn raises exactly when the root record leaves working",
+      "checks": [
+        {
+          "case": "working->done",
+          "turn_expected": 1,
+          "turn_observed": 1,
+          "status": {
+            "state": "done"
+          },
+          "pass": true
+        },
+        {
+          "case": "working->idle",
+          "turn_expected": 1,
+          "turn_observed": 1,
+          "status": {
+            "state": "idle"
+          },
+          "pass": true
+        },
+        {
+          "case": "working->blocked",
+          "turn_expected": 1,
+          "turn_observed": 1,
+          "status": {
+            "state": "blocked"
+          },
+          "pass": true
+        },
+        {
+          "case": "working->error",
+          "turn_expected": 1,
+          "turn_observed": 1,
+          "status": {
+            "state": "error"
+          },
+          "pass": true
+        },
+        {
+          "case": "working->clear",
+          "turn_expected": 1,
+          "turn_observed": 1,
+          "status": null,
+          "pass": true
+        },
+        {
+          "case": "idle->done (never worked)",
+          "turn_expected": 0,
+          "turn_observed": 0,
+          "status": {
+            "state": "done"
+          },
+          "pass": true
+        },
+        {
+          "case": "working->working",
+          "turn_expected": 0,
+          "turn_observed": 0,
+          "status": {
+            "state": "working"
+          },
+          "pass": true
+        },
+        {
+          "case": "blocked->done (never worked)",
+          "turn_expected": 0,
+          "turn_observed": 0,
+          "status": {
+            "state": "done"
+          },
+          "pass": true
+        }
+      ],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "status-ms-semantics",
+      "desc": "status_ms changes only when the root word changes",
+      "steps": [
+        {
+          "step": 0,
+          "status": {
+            "state": "working"
+          },
+          "status_ms": 1793792510569
+        },
+        {
+          "step": 1,
+          "status": {
+            "state": "working"
+          },
+          "status_ms": 1793792510569
+        },
+        {
+          "step": 2,
+          "status": {
+            "state": "working"
+          },
+          "status_ms": 1793792510569
+        },
+        {
+          "step": 3,
+          "status": {
+            "state": "idle"
+          },
+          "status_ms": 1793792512369
+        }
+      ],
+      "delta_pairs": [
+        [
+          {
+            "step": 0,
+            "status": {
+              "state": "working"
+            },
+            "status_ms": 1793792510569
+          },
+          {
+            "step": 1,
+            "status": {
+              "state": "working"
+            },
+            "status_ms": 1793792510569
+          }
+        ],
+        [
+          {
+            "step": 1,
+            "status": {
+              "state": "working"
+            },
+            "status_ms": 1793792510569
+          },
+          {
+            "step": 2,
+            "status": {
+              "state": "working"
+            },
+            "status_ms": 1793792510569
+          }
+        ],
+        [
+          {
+            "step": 2,
+            "status": {
+              "state": "working"
+            },
+            "status_ms": 1793792510569
+          },
+          {
+            "step": 3,
+            "status": {
+              "state": "idle"
+            },
+            "status_ms": 1793792512369
+          }
+        ]
+      ],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "reported-turn-reset",
+      "desc": "reported is sticky; exit resets status but not the turn",
+      "observed": {
+        "clear_after_report": {
+          "status": null,
+          "records": {},
+          "reported": true,
+          "turn": 1,
+          "status_ms": 1793792512654,
+          "state": "live",
+          "_get": {
+            "address": "t16x",
+            "argv": [
+              "python3",
+              "/home/you/src/dsh-research/probes/emit_steps.py",
+              "/tmp/proto1/steps-rep.json"
+            ],
+            "cols": 200,
+            "created_ms": 1793792512393,
+            "cwd": "/home/you/src/dsh-research/probes",
+            "die_with_parent": false,
+            "exit_code": null,
+            "finished_ms": null,
+            "foreground": {
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/emit_steps.py",
+                "/tmp/proto1/steps-rep.json"
+              ],
+              "cwd": "/home/you/src/dsh-research/probes",
+              "name": "python3",
+              "pid": 160333
+            },
+            "identity": "ghostty",
+            "keep": false,
+            "labels": {},
+            "name": "rep",
+            "notify": true,
+            "parent": null,
+            "pid": 160333,
+            "reason": null,
+            "reported": true,
+            "rm": false,
+            "rows": 120,
+            "screen": "exact",
+            "signal": null,
+            "state": "live",
+            "status": null,
+            "status_ms": 1793792512654,
+            "template": null,
+            "title": "",
+            "turn": 1
+          }
+        },
+        "after_exit": {
+          "state": "finished",
+          "status": null,
+          "records": null,
+          "reported": true,
+          "turn": 1,
+          "status_ms": 1793792513078,
+          "exit_code": 0
+        }
+      },
+      "pass": true,
+      "failures": []
+    }
+  ]
+}

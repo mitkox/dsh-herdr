@@ -1,0 +1,7 @@
+{"phase":"authenticated","ts":1793793096997,"status":303,"cookieName":"dsh-auth-D1gu4AUZ6XwohD5r0eN4-fmFNLAOCeA62Dj465JieJs"}
+{"phase":"session-created","ts":1793793097010,"sessionId":"session-25fa78d0-98e8-4ab2-97a5-a1c8ae306026","cwd":"/tmp/herdr-e2e/work","agentPreset":"standard"}
+{"phase":"prompt","ts":1793793097010,"sessionId":"session-25fa78d0-98e8-4ab2-97a5-a1c8ae306026","prompt":"PHASE ONE respond with the long mock answer","mode":"simple"}
+{"phase":"turn:observed","ts":1793793097016,"sessionId":"session-25fa78d0-98e8-4ab2-97a5-a1c8ae306026","state":null,"activity":null,"aggregate":{"state":"idle","title":"PHASE TWO ask the user","msg":null,"working":0},"updatedMs":1793793095895}
+{"phase":"turn:observed","ts":1793793097116,"sessionId":"session-25fa78d0-98e8-4ab2-97a5-a1c8ae306026","state":"working","activity":"thinking","aggregate":{"state":"working","title":"PHASE ONE respond with the","msg":"thinking","working":1},"updatedMs":1793793097104}
+{"phase":"turn:observed","ts":1793793100027,"sessionId":"session-25fa78d0-98e8-4ab2-97a5-a1c8ae306026","state":"idle","activity":"waiting for activity…","aggregate":{"state":"idle","title":"PHASE ONE respond with the","msg":null,"working":0},"updatedMs":1793793099953}
+{"phase":"done","ts":1793793100027,"sessionId":"session-25fa78d0-98e8-4ab2-97a5-a1c8ae306026"}

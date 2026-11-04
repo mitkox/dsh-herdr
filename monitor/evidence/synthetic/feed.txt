@@ -1,0 +1,29 @@
+◈ dsh-herdr — aggregate DSH session watcher
+sessions /tmp/probe4/synth/sessions
+state    /tmp/probe4/synth/state.json
+herdr    yes — OSC 7501 app=dsh-tui
+found   1 session journal(s) in the last 48h
+
+  demo-000 idle     13:42:36 Fix the failing test
+
+[13:42:36] ● aggregate: idle (0 blocked, 0 working, 1 idle)
+[demo-000] 13:42:38 ── turn 1 started ──
+[demo-000] 13:42:38 ⚙ bash $ npm test -- --run
+[demo-000] 13:42:38 ● working — bash: $ npm test -- --run
+[13:42:38] ● aggregate: working (0 blocked, 1 working, 0 idle)
+[demo-000] 13:42:38 ⏸ approval needed: bash — runs a command
+[demo-000] 13:42:39 ● blocked — approval: bash
+[13:42:39] ● aggregate: blocked (1 blocked, 0 working, 0 idle)
+[demo-000] 13:42:39 ▶ approval allowed-once
+[demo-000] 13:42:39 ✓ bash done (1690ms)
+[demo-000] 13:42:39 ── turn 1 ended (done) ──
+[demo-000] 13:42:39 ● idle — turn 1 done
+[13:42:39] ● aggregate: idle (0 blocked, 0 working, 1 idle)
+[demo-000] 13:42:40 ── turn 2 started ──
+[demo-000] 13:42:40 ⚙ ask_user_question Pick a branch strategy
+[demo-000] 13:42:40 ● blocked — question: Pick a branch strategy
+[13:42:40] ● aggregate: blocked (1 blocked, 0 working, 0 idle)
+[demo-000] 13:42:41 ✓ ask_user_question done (834ms)
+[demo-000] 13:42:41 ── turn 2 ended (done) ──
+[demo-000] 13:42:41 ● idle — turn 2 done
+[13:42:41] ● aggregate: idle (0 blocked, 0 working, 1 idle)

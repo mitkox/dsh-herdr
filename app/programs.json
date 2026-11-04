@@ -1,0 +1,20 @@
+{
+  "programs": {
+    "dsh-tui": {
+      "name": "DeepSeek Harness",
+      "icon": "mods/dsh-monitor/dsh-tui.svg",
+      "tint": true,
+      "tile": "#1c1d21",
+      "color": "#ffffff",
+      "match": ["dsh"]
+    },
+    "dsh-herdr": {
+      "name": "DeepSeek Harness (monitor)",
+      "icon": "mods/dsh-monitor/dsh-tui.svg",
+      "tint": true,
+      "tile": "#1c1d21",
+      "color": "#ffffff",
+      "run": ["dsh-herdr", "watch"]
+    }
+  }
+}

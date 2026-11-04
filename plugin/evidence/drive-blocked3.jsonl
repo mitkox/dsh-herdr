@@ -1,0 +1,10 @@
+{"phase":"authenticated","ts":1793793068168,"status":303,"cookieName":"dsh-auth-D1gu4AUZ6XwohD5r0eN4-fmFNLAOCeA62Dj465JieJs"}
+{"phase":"session-created","ts":1793793068189,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c","cwd":"/tmp/herdr-e2e/work","agentPreset":"standard"}
+{"phase":"prompt","ts":1793793068189,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c","prompt":"PHASE TWO ask the user a question","mode":"blocked"}
+{"phase":"blocked:observed","ts":1793793068208,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c","state":null,"activity":null,"aggregate":{"state":"idle","title":null,"msg":null,"working":0},"updatedMs":1793793065890}
+{"phase":"blocked:observed","ts":1793793068309,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c","state":"blocked","activity":"Proceed with the herdr probe approval test?","aggregate":{"state":"blocked","title":"PHASE TWO ask the user","msg":"Proceed with the herdr probe approval test?","working":1},"updatedMs":1793793068282}
+{"phase":"blocked-captured","ts":1793793068309,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c","holdMs":4000}
+{"phase":"cancel","ts":1793793072310,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c"}
+{"phase":"idle-after-cancel:observed","ts":1793793072318,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c","state":"blocked","activity":"Proceed with the herdr probe approval test?","aggregate":{"state":"blocked","title":"PHASE TWO ask the user","msg":"Proceed with the herdr probe approval test?","working":1},"updatedMs":1793793070891}
+{"phase":"idle-after-cancel:observed","ts":1793793072419,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c","state":"idle","activity":"waiting for activity…","aggregate":{"state":"idle","title":"PHASE TWO ask the user","msg":null,"working":0},"updatedMs":1793793072416}
+{"phase":"done","ts":1793793072419,"sessionId":"session-a3bcb468-0f7a-4a90-b519-49ec20dd069c"}

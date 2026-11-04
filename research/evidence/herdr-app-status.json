@@ -1,0 +1,15 @@
+{
+  "zoom": 1.5,
+  "font_size": 21.0,
+  "ui_font_size": 19.5,
+  "space": "vps/spb5f51725eb77be87d8c9daca68c2f178",
+  "tab": "vps/tb63207e43c0fa4af09f9064c7f57a9f23",
+  "focused_pane": "vps/pc06da045560087d3f309c88dba5d2f16",
+  "layout": "main",
+  "agent": "t2",
+  "floats": {},
+  "overlays": [
+    "dsh-monitor"
+  ],
+  "errors": []
+}

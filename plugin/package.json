@@ -1,0 +1,44 @@
+{
+  "name": "dsh-plugin-herdr",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Report a DeepSeek Harness host as a Herdr agent (OSC 7501) and publish a per-session state document for the Herdr panel.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "README.md",
+    "STATE-SCHEMA.md"
+  ],
+  "license": "Apache-2.0",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.0-0 <0.3.0"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek",
+    "deepseek-harness",
+    "herdr",
+    "osc-7501",
+    "plugin",
+    "bundle"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mitkox/dsh-herdr.git",
+    "directory": "plugin"
+  },
+  "homepage": "https://github.com/mitkox/dsh-herdr/tree/main/plugin#readme",
+  "author": "Mitko Vasilev <43349905+mitkox@users.noreply.github.com>"
+}

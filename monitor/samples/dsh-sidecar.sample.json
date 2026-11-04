@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "updatedMs": 1793792560517,
+  "producer": "dsh-monitor-sidecar",
+  "host": {
+    "pid": 424242,
+    "profile": "web",
+    "herdr": true,
+    "terminalId": "t9"
+  },
+  "sessions": [
+    {
+      "id": "a5108922-a7f2-43aa-8808-38e7434d188b",
+      "title": "DSH-Herdr plugin OSC 7501 integration",
+      "status": "blocked",
+      "activity": "approval: bash",
+      "updatedMs": 1793792560000,
+      "blockedReason": "approval",
+      "source": "log-tail"
+    },
+    {
+      "id": "e5b55b9b-7ef3-4885-8c5a-52930f52c394",
+      "title": "integrate dsh with herder core",
+      "status": "working",
+      "activity": "bash: $ cargo test -p herdr-core",
+      "updatedMs": 1793792559000,
+      "source": "log-tail"
+    },
+    {
+      "id": "45491157-9b78-4e50-9ea8-5a2b3c4d5e6f",
+      "title": "Refactor the payments module",
+      "status": "idle",
+      "activity": "turn 4 done",
+      "updatedMs": 1793792558000,
+      "source": "log-tail"
+    }
+  ]
+}

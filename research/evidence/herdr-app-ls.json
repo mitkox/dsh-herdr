@@ -1,0 +1,135 @@
+{
+  "spaces": [
+    {
+      "id": "sp1a1249774f0581375ec7efcbbb2e8823",
+      "name": "dev",
+      "folder": "/home/you",
+      "machine": null,
+      "active": false,
+      "tabs": [
+        {
+          "id": "tba8fe05956fc70ba206db2aea121645a6",
+          "name": "1",
+          "active": true,
+          "settled": false,
+          "terminals": [
+            {
+              "terminal": "t1",
+              "pane": "p13b1170815a5f1175ae705b5b59d89df",
+              "status": null,
+              "app": null,
+              "name": null,
+              "sub_agents": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sp15413fb176b03254d450d0f13467b9ab",
+      "name": "esf",
+      "folder": "/home/you",
+      "machine": null,
+      "active": false,
+      "tabs": [
+        {
+          "id": "tbd9f30f36b145d0aac482d40b47eb112e",
+          "name": "1",
+          "active": true,
+          "settled": false,
+          "terminals": [
+            {
+              "terminal": "t2",
+              "pane": "p0cc54587f6c55b58ffd186a746c6a137",
+              "status": "working",
+              "app": "dsh-tui",
+              "name": null,
+              "sub_agents": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sp7dd7c03773b95f40b9f1294b9593e6b3",
+      "name": "~",
+      "folder": "/home/you",
+      "machine": null,
+      "active": false,
+      "tabs": [
+        {
+          "id": "tb6f5cf1d6ade625a09e4bdbf8fbcdff4f",
+          "name": "1",
+          "active": true,
+          "settled": false,
+          "terminals": [
+            {
+              "terminal": "t5",
+              "pane": "p68cc91dc207b368f455ec0de82b5a980",
+              "status": "idle",
+              "app": "pi",
+              "name": null,
+              "sub_agents": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vps/sp31cdacba65a59668d0d82906161ab082",
+      "name": "~",
+      "folder": "/home/you",
+      "machine": "vps",
+      "active": false,
+      "tabs": [
+        {
+          "id": "vps/tb7d397fd23466e11e05c2c4c65f637d39",
+          "name": "1",
+          "active": true,
+          "settled": false,
+          "terminals": [
+            {
+              "terminal": "vps/t13",
+              "pane": "vps/p645082637be9e2643728d422a954c1fc",
+              "status": null,
+              "app": null,
+              "name": null,
+              "sub_agents": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vps/spb5f51725eb77be87d8c9daca68c2f178",
+      "name": "deepseek-harness",
+      "folder": "/home/you",
+      "machine": "vps",
+      "active": true,
+      "tabs": [
+        {
+          "id": "vps/tb63207e43c0fa4af09f9064c7f57a9f23",
+          "name": "1",
+          "active": true,
+          "settled": false,
+          "terminals": [
+            {
+              "terminal": "vps/t14",
+              "pane": "vps/pc06da045560087d3f309c88dba5d2f16",
+              "status": null,
+              "app": null,
+              "name": null,
+              "sub_agents": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "recent": [
+    {
+      "name": "",
+      "folder": "/home/you/src/esf"
+    }
+  ]
+}

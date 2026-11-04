@@ -1,0 +1,920 @@
+#!/usr/bin/env node
+/**
+ * dsh-herdr — see DeepSeek Harness (dsh) agents inside Herdr and monitor them work.
+ *
+ * Herdr models an "agent" as a terminal whose program reports status through the
+ * OSC 7501 terminal protocol. dsh 0.2.x has no terminal front end: its agents run
+ * inside the `dsh web` host and are driven from the browser. This command is the
+ * bridge. It follows the durable DSH session journals (append-only zstd JSONL
+ * under ~/.dsh/sessions), renders a live activity feed, and reports an aggregate
+ * agent status to herdr-core. It is strictly read-only towards DSH.
+ *
+ * Two ways to run it:
+ *
+ *   dsh-herdr attach
+ *       Injects the report into an existing dsh host's own herdr pane, so the
+ *       pane the user already sees ("esf / t2", etc.) becomes a live "DeepSeek
+ *       Harness" agent row. Works with a host started before this integration:
+ *       no restart needed. Runs detached; stops by itself when the host exits.
+ *
+ *   dsh-herdr watch
+ *       Runs as its own herdr-core terminal (`hc run --bg --name dsh dsh-herdr
+ *       watch`), prints a live feed of every DSH session and reports status for
+ *       this terminal. Use it as a monitor pane next to the agent.
+ *
+ * Both modes also write an atomic state document for UI consumers (the
+ * herdr-app dsh-monitor mod), default:
+ *   ${XDG_STATE_HOME:-~/.local/state}/dsh-herdr/agents.json
+ *
+ * What is reported (OSC 7501 root record, colon-separated key=value pairs):
+ *   state=working while any watched session is in a turn, state=idle between
+ *   turns (herdr-app itself shows "done" for a finish nobody watched),
+ *   app=dsh-tui so herdr-app's "DeepSeek Harness" program entry (name + icon)
+ *   applies, title=<base64 active session title>, msg=<base64 current activity>.
+ *
+ * Environment: DSH_HOME (~/.dsh), DSH_URL (web GUI URL), DSH_HERDR_STATE (state
+ * document path), HC_TERMINAL_ID / HC_TERMINAL_SOCKET / HERDR_ENV (set by
+ * herdr-core inside a pane).
+ */
+import { spawn } from 'node:child_process'
+import { promises as fs, existsSync, openSync, closeSync, writeSync, readFileSync, unlinkSync, mkdirSync } from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { createZstdDecompress, zstdDecompressSync } from 'node:zlib'
+
+const VERSION = '0.2.0'
+const SCRIPT_PATH = fileURLToPath(import.meta.url)
+const DEFAULT_TICK_MS = 400
+const RECENT_WINDOW_MS = 12 * 60 * 60 * 1000
+const MAX_LISTED_SESSIONS = 50
+
+const HOME = os.homedir()
+const DSH_HOME = process.env.DSH_HOME || path.join(HOME, '.dsh')
+const SESSIONS_ROOT = path.join(DSH_HOME, 'sessions')
+const STATE_ROOT = path.join(process.env.XDG_STATE_HOME || path.join(HOME, '.local', 'state'), 'dsh-herdr')
+const DEFAULT_STATE_PATH = path.join(STATE_ROOT, 'agents.json')
+const HOST_URL = process.env.DSH_URL || 'http://127.0.0.1:3080'
+const HC_BIN = process.env.HC_BIN || 'hc'
+const DSH_URL_OVERRIDE = process.env.DSH_URL
+const IN_HERDR = Boolean(process.env.HC_TERMINAL_ID || process.env.HC_TERMINAL_SOCKET || process.env.HERDR_ENV === '1')
+
+// ---------------------------------------------------------------- arguments
+
+const rawArgs = process.argv.slice(2)
+const firstArg = rawArgs[0]
+const command = firstArg === 'help' || firstArg === '--help' || firstArg === '-h' ? 'help'
+  : firstArg === 'version' || firstArg === '--version' || firstArg === '-V' ? 'version'
+  : firstArg && !firstArg.startsWith('-') ? firstArg
+  : 'watch'
+const rest = firstArg === command ? rawArgs.slice(1) : rawArgs
+
+function flag(name) {
+  return rest.includes(`--${name}`)
+}
+function flagValue(name) {
+  const i = rest.indexOf(`--${name}`)
+  return i >= 0 ? rest[i + 1] : undefined
+}
+
+const QUIET = flag('quiet')
+const ONCE = flag('once')
+const INCLUDE_OLD = flag('all')
+const FORCE_OSC = flag('osc')
+const NO_OSC = flag('no-osc')
+const DAEMON = flag('daemon')
+const FORCE = flag('force')
+const DAEMON_CHILD = flag('daemon-child')
+const FEED_STDOUT = flag('feed-stdout')
+const ONLY = flagValue('session') || null
+const INTERVAL = Math.max(120, Number(flagValue('interval') || DEFAULT_TICK_MS) || DEFAULT_TICK_MS)
+const STATE_PATH = flagValue('state') || process.env.DSH_HERDR_STATE || DEFAULT_STATE_PATH
+const ATTACH_PANE = flagValue('pane') || process.env.HC_TERMINAL_ID || null
+const ATTACH_PID = Number(flagValue('host-pid') || 0) || null
+const ATTACH_LOG = flagValue('log') || path.join(STATE_ROOT, 'attach.log')
+const OSC = !NO_OSC && (IN_HERDR || FORCE_OSC || command === 'attach')
+
+if (command === 'help' || command === '--help' || command === '-h') {
+  printHelp()
+  process.exit(0)
+}
+if (command === 'version' || command === '--version' || command === '-V') {
+  process.stdout.write(`dsh-herdr ${VERSION}\n`)
+  process.exit(0)
+}
+if (!['watch', 'attach', 'daemon', 'install', 'uninstall'].includes(command)) {
+  process.stderr.write(`dsh-herdr: unknown command ${JSON.stringify(command)} (try: dsh-herdr watch --help)\n`)
+  process.exit(2)
+}
+
+function printHelp() {
+  const stateDefault = DEFAULT_STATE_PATH.replace(HOME, '~')
+  process.stdout.write(`dsh-herdr ${VERSION} — DeepSeek Harness agent monitor for Herdr
+
+Usage: dsh-herdr watch  [options]    run as its own herdr terminal: live feed
+       dsh-herdr attach [options]    report into a running dsh host's own pane
+       dsh-herdr daemon [options]    keep every dsh web pane in Herdr attached
+       dsh-herdr install [opts]      install the Herdr panel + program entries
+       dsh-herdr uninstall           remove what 'install' added
+
+Both follow the durable DSH session journals (~/.dsh/sessions/**/session.v4.jsonl.zstd),
+print/show a live activity feed, report an aggregate agent status to herdr-core
+via OSC 7501 (Herdr sidebar shows "DeepSeek Harness" working/idle/needs-you),
+and write a state JSON document for the herdr-app monitor mod.
+
+Options (watch):
+  --session <id|prefix>  Follow one session only (default: every recent session).
+  --all                  Include sessions idle for more than ${RECENT_WINDOW_MS / 3600000}h.
+  --quiet                No feed; only status reporting + state JSON.
+  --once                 Print the current summary as JSON and exit.
+  --osc / --no-osc       Force / disable OSC 7501 reporting.
+
+Options (attach):
+  --pane <tN>            Herdr terminal running the dsh host (default: $HC_TERMINAL_ID).
+  --host-pid <pid>       dsh host process id (default: the pane's foreground process).
+  --daemon               Detach and keep reporting until the host exits.
+  --force                Replace a running attach daemon for the same pane.
+  --log <path>           Feed log file for daemon mode (default: ${ATTACH_LOG.replace(HOME, '~')}).
+
+Common:
+  --state <path>         State JSON path (default: ${stateDefault}).
+  --interval <ms>        Journal poll interval (default: ${DEFAULT_TICK_MS}).
+  -h, --help             This help.        -V, --version   Version.
+
+Environment: DSH_HOME (~/.dsh), DSH_URL (web GUI URL), DSH_HERDR_STATE (state
+document path), HC_BIN (path to the herdr-core CLI, default 'hc'),
+HC_TERMINAL_ID / HC_TERMINAL_SOCKET / HERDR_ENV (set by herdr-core in a pane).
+`)
+}
+
+// ---------------------------------------------------------------- shared utils
+
+// OSC 7501 limits (verified by herdr/research/herdr-protocol.md against hc 0.1.17):
+// title decoded <=192 bytes, msg decoded <=2048 bytes, whole report < ~4087 bytes.
+const TITLE_MAX_BYTES = 192
+const MSG_MAX_BYTES = 2048
+const RECORD_MAX_LENGTH = 3900
+const trimUtf8 = (buffer, maxBytes) => {
+  if (buffer.length <= maxBytes) return buffer
+  let end = maxBytes
+  while (end > 0 && (buffer[end] & 0xc0) === 0x80) end -= 1 // never split a code point
+  return buffer.subarray(0, end)
+}
+const b64 = (s) => Buffer.from(String(s ?? ''), 'utf8').toString('base64')
+const b64Clamp = (s, maxBytes) => trimUtf8(Buffer.from(String(s ?? ''), 'utf8'), maxBytes).toString('base64')
+/**
+ * Build one OSC 7501 root record. title/msg are strict base64; the state word is
+ * reported as-is (herdr-core stores words, the app derives done/idle from turns).
+ * @param {{state:string,title:string,msg:string,kind?:string|null}} agg
+ */
+function buildRecord(agg) {
+  const kind = agg.state === 'blocked' && agg.kind ? `:kind=${agg.kind}` : ''
+  let fields = `state=${agg.state}:app=dsh-tui${kind}:title=${b64Clamp(agg.title, TITLE_MAX_BYTES)}:msg=${b64Clamp(agg.msg, MSG_MAX_BYTES)}`
+  if (fields.length > RECORD_MAX_LENGTH) {
+    fields = `state=${agg.state}:app=dsh-tui${kind}:title=${b64Clamp(agg.title, TITLE_MAX_BYTES)}`
+  }
+  return `\x1b]7501;${fields}\x07` // BEL is the safest terminator (both accepted)
+}
+const ansi = (code, s) => `\x1b[${code}m${s}\x1b[0m`
+const dim = (s) => ansi('2', s)
+const bold = (s) => ansi('1', s)
+const fmtClock = (ms) => new Date(ms).toLocaleTimeString('en-GB', { hour12: false })
+const clip = (s, n) => {
+  const t = String(s ?? '').replace(/\s+/g, ' ').trim()
+  return t.length > n ? t.slice(0, n - 1) + '…' : t
+}
+const oscRecord = (fields) => `\x1b]7501;${fields}\x07`
+
+let stdoutBroken = false
+const writeStdout = (s) => {
+  if (stdoutBroken || !process.stdout.writable) return
+  try { process.stdout.write(s) } catch { stdoutBroken = true }
+}
+process.stdout.on('error', () => { stdoutBroken = true })
+
+let feedFileFd = null
+function writeFeed(text) {
+  if (QUIET) return
+  if (FEED_STDOUT || !feedFileFd) writeStdout(text + '\n')
+  if (feedFileFd !== null) {
+    try { writeSync(feedFileFd, `${fmtClock(Date.now())} ${text.replace(/\x1b\[[0-9;]*m/g, '')}\n`) } catch { /* log gone */ }
+  }
+}
+
+// ---------------------------------------------------------------- session journals
+
+/**
+ * @type {Map<string, {file:string, id:string, cwd:string, preset:string, createdAt:number,
+ *   lastSize:number, lastSeq:number, openTurn:boolean, turn:number, title:string|null,
+ *   activity:string, lastEventMs:number, lastTurnEndMs:number}>}
+ */
+const sessions = new Map()
+const QUESTION_TOOLS = new Set(['ask_user_question', 'exit_plan_mode'])
+const STALE_TURN_MS = 15 * 60 * 1000
+let lastReportKey = ''
+
+function newSession(file, id, mtimeMs) {
+  return {
+    file, id, cwd: '', preset: '', createdAt: 0, depth: 0, lastSize: -1, lastSeq: -1,
+    openTurn: false, turn: 0, title: null, activity: 'waiting for activity…',
+    lastEventMs: mtimeMs, lastTurnEndMs: 0,
+    pendingApprovals: new Map(), // approval id -> tool name/description
+    pendingQuestions: new Map(), // tool callId -> question text
+  }
+}
+
+/** Pending human decision for a session: approval wins over question. */
+function blockedOf(s) {
+  if (s.pendingApprovals.size > 0) {
+    const first = s.pendingApprovals.values().next().value
+    return { kind: 'permission', msg: `approval: ${clip(first, 120)}` }
+  }
+  if (s.pendingQuestions.size > 0) {
+    const first = s.pendingQuestions.values().next().value
+    return { kind: 'question', msg: `question: ${clip(first, 120)}` }
+  }
+  return null
+}
+
+/** A turn that stopped growing long ago is reported idle (a dead host must not look busy). */
+function staleTurn(s, now = Date.now()) {
+  return s.openTurn && now - s.lastEventMs > STALE_TURN_MS
+}
+
+function displayTitle(s) {
+  if (s.title) return s.title
+  const base = s.cwd ? path.basename(s.cwd) : ''
+  return base ? `${base} · ${s.id.replace(/^session-/, '').slice(0, 8)}` : s.id
+}
+
+function toolSummary(name, argsRaw) {
+  let args = {}
+  try { args = JSON.parse(argsRaw || '{}') } catch { /* not JSON */ }
+  const fileBase = typeof args.file_path === 'string' ? path.basename(args.file_path)
+    : typeof args.path === 'string' ? path.basename(args.path) : ''
+  switch (name) {
+    case 'bash': return `bash $ ${clip(String(args.command ?? '').split('\n')[0], 110)}`
+    case 'read': case 'write': case 'edit': {
+      const verb = name === 'read' ? 'read' : name === 'write' ? 'write' : 'edit'
+      return `${verb} ${fileBase || clip(args.file_path || args.path || '', 70)}`
+    }
+    case 'glob': return `glob ${clip(args.pattern ?? '', 70)}`
+    case 'grep': return `grep ${clip(args.pattern ?? '', 70)}`
+    case 'send_message': return `send_message → ${clip(args.target ?? '', 40)}`
+    case 'task': case 'subagent': return `${name} ${clip(args.description ?? args.prompt ?? '', 80)}`
+    case 'todo_write': return 'todo update'
+    case 'ask_user_question': return 'asks the operator a question'
+    default: {
+      const first = Object.values(args).find((v) => typeof v === 'string')
+      return first ? `${name} ${clip(first, 70)}` : String(name)
+    }
+  }
+}
+
+function messageSnippet(ev) {
+  const blocks = ev?.data?.message?.content ?? ev?.data?.content ?? []
+  const parts = []
+  for (const b of Array.isArray(blocks) ? blocks : []) {
+    if (typeof b === 'string') parts.push(b)
+    else if (b && typeof b.text === 'string' && (b.type === 'text' || b.type === 'reasoning')) parts.push(b.text)
+  }
+  return clip(parts.join(' '), 140)
+}
+
+function ingest(s, ev, live) {
+  if (typeof ev.seq === 'number') {
+    if (ev.seq <= s.lastSeq) return false
+    s.lastSeq = ev.seq
+  }
+  const time = typeof ev.time === 'number' ? ev.time : Date.now()
+  if (time > s.lastEventMs) s.lastEventMs = time
+  let changed = false
+  const label = dim(displayTitle(s).slice(0, 26).padEnd(26))
+  switch (ev.type) {
+    case 'session/title': {
+      const title = ev?.data?.title
+      if (typeof title === 'string' && title.trim() && title.trim() !== s.title) {
+        s.title = title.trim()
+        changed = true
+        if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} ${ansi('35', 'title')} ${clip(s.title, 90)}`)
+      }
+      break
+    }
+    case 'turn/start': {
+      const turn = ev?.data?.turn
+      s.openTurn = true
+      s.turn = typeof turn === 'number' ? turn : s.turn + 1
+      changed = true
+      if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} ${ansi('32', `▶ turn ${s.turn} started`)}`)
+      break
+    }
+    case 'turn/end': {
+      s.openTurn = false
+      s.lastTurnEndMs = time
+      changed = true
+      if (live) {
+        const kind = ev?.data?.reason?.kind
+        const mark = kind && kind !== 'completed' && kind !== 'stop' ? ` ${ansi('33', `(${kind})`)}` : ''
+        writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} ${ansi('32', `■ turn ${s.turn} ended`)}${mark}`)
+      }
+      break
+    }
+    case 'tool/call': {
+      const toolName = String(ev?.data?.name ?? '')
+      s.activity = toolSummary(toolName, ev?.data?.arguments)
+      changed = true
+      if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} ${s.activity}`)
+      if (QUESTION_TOOLS.has(toolName)) {
+        const callId = String(ev?.data?.callId ?? `call-${ev.seq}`)
+        let summary = ''
+        try {
+          const args = JSON.parse(ev?.data?.arguments ?? '{}')
+          summary = String(args?.questions?.[0]?.question ?? args?.questions?.[0]?.title ?? args?.plan ?? '')
+        } catch { /* keep empty */ }
+        s.pendingQuestions.set(callId, summary || 'waiting for the operator')
+        changed = true
+      }
+      break
+    }
+    case 'assistant/message': {
+      const snip = messageSnippet(ev)
+      if (snip) { s.activity = `assistant: ${snip}`; changed = true }
+      break
+    }
+    case 'user/message': {
+      const snip = messageSnippet(ev)
+      if (snip) { s.activity = `user: ${snip}`; changed = true }
+      if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} ${ansi('36', '✉ user message')}`)
+      break
+    }
+    case 'approval/asked': {
+      const id = String(ev?.data?.id ?? `ask-${ev.seq}`)
+      const tool = String(ev?.data?.toolName ?? ev?.data?.tool ?? 'a tool')
+      s.pendingApprovals.set(id, tool)
+      changed = true
+      if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} ${ansi('33', `needs approval: ${clip(tool, 60)}`)}`)
+      break
+    }
+    case 'approval/decided': {
+      const id = String(ev?.data?.id ?? '')
+      if (s.pendingApprovals.delete(id)) {
+        changed = true
+        if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} approval ${clip(String(ev?.data?.outcome ?? 'decided'), 40)}`)
+      }
+      break
+    }
+    case 'tool/result': {
+      const callId = ev?.data?.message?.toolCallId ?? ev?.data?.toolCallId ?? ev?.data?.message?.source?.callId
+      if (callId && s.pendingQuestions.delete(String(callId))) {
+        changed = true
+        if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} question answered`)
+      }
+      break
+    }
+    case 'command/run': {
+      changed = true
+      if (live) writeFeed(`${dim(`[${fmtClock(Date.now())}]`)} ${label} command ${clip(ev?.data?.command ?? ev?.data?.name ?? '', 60)}`)
+      break
+    }
+  }
+  return changed
+}
+
+/**
+ * Decode a dsh session journal. The file is JSONL compressed as a concatenation
+ * of zstd frames; the host may be mid-append, so a truncated trailing frame is
+ * normal. Node's synchronous decoder is used first (portable: no `zstd` binary
+ * needed); when the tail is partial we fall back to the streaming decoder and
+ * keep the decodable prefix.
+ * @param {string} file
+ * @returns {Promise<string|null>}
+ */
+function decompress(file) {
+  return fs.readFile(file).then((buffer) => {
+    if (buffer.length === 0) return ''
+    try {
+      return zstdDecompressSync(buffer).toString('utf8')
+    } catch {
+      return decodePartial(buffer)
+    }
+  }).catch(() => null)
+}
+
+function decodePartial(buffer) {
+  return new Promise((resolve) => {
+    let settled = false
+    const chunks = []
+    const finish = () => {
+      if (settled) return
+      settled = true
+      resolve(Buffer.concat(chunks).toString('utf8'))
+    }
+    try {
+      const decoder = createZstdDecompress()
+      decoder.on('data', (chunk) => chunks.push(chunk))
+      decoder.on('error', finish)
+      decoder.on('end', finish)
+      decoder.end(buffer)
+    } catch {
+      finish()
+    }
+  })
+}
+
+async function listJournalFiles() {
+  const files = []
+  let slugs = []
+  try { slugs = await fs.readdir(SESSIONS_ROOT, { withFileTypes: true }) } catch { return files }
+  for (const slug of slugs) {
+    if (!slug.isDirectory()) continue
+    const slugDir = path.join(SESSIONS_ROOT, slug.name)
+    let ids = []
+    try { ids = await fs.readdir(slugDir, { withFileTypes: true }) } catch { continue }
+    for (const idDir of ids) {
+      if (!idDir.isDirectory()) continue
+      const file = path.join(slugDir, idDir.name, 'session.v4.jsonl.zstd')
+      if (!existsSync(file)) continue
+      const id = idDir.name.startsWith('session-') ? idDir.name : `session-${idDir.name}`
+      if (ONLY && !id.startsWith(ONLY) && !idDir.name.startsWith(ONLY)) continue
+      files.push({ file, id })
+    }
+  }
+  return files
+}
+
+async function refresh(initial) {
+  const files = await listJournalFiles()
+  const now = Date.now()
+  for (const { file, id } of files) {
+    let stat
+    try { stat = await fs.stat(file) } catch { continue }
+    let s = sessions.get(id)
+    if (!s) {
+      s = newSession(file, id, stat.mtimeMs)
+      sessions.set(id, s)
+    }
+    const stale = now - stat.mtimeMs > RECENT_WINDOW_MS
+    if (stale && !INCLUDE_OLD && !ONLY) {
+      if (initial) sessions.delete(id)
+      continue
+    }
+    if (stat.size === s.lastSize) continue
+    s.lastSize = stat.size
+    const text = await decompress(file)
+    if (text === null) continue // mid-write: retry next tick
+    for (const line of text.split('\n')) {
+      if (!line) continue
+      let ev
+      try { ev = JSON.parse(line) } catch { continue }
+      if (ev.type === 'session') {
+        if (typeof ev.cwd === 'string' && ev.cwd) s.cwd = ev.cwd
+        if (typeof ev.agentPreset === 'string') s.preset = ev.agentPreset
+        if (typeof ev.createdAt === 'number') s.createdAt = ev.createdAt
+        if (typeof ev.delegationDepth === 'number') s.depth = ev.delegationDepth
+        continue
+      }
+      ingest(s, ev, !initial)
+    }
+  }
+}
+
+function aggregate() {
+  const now = Date.now()
+  const all = [...sessions.values()]
+  // Prefer a top-level session (a sub-agent's turn is part of its parent's work).
+  const byImportance = (a, b) => (a.depth === 0 ? 0 : 1) - (b.depth === 0 ? 0 : 1) || b.lastEventMs - a.lastEventMs
+  // 1) A pending human decision is the only thing Herdr must alert on.
+  const blocked = all.filter((s) => blockedOf(s) !== null).sort(byImportance)
+  if (blocked.length > 0) {
+    const top = blocked[0]
+    const info = blockedOf(top)
+    return {
+      state: 'blocked',
+      kind: info.kind,
+      title: displayTitle(top),
+      msg: info.msg,
+      working: all.filter((s) => s.openTurn && !staleTurn(s, now)).length,
+      blocked: blocked.length,
+    }
+  }
+  // 2) Working (ignore turns whose journal stopped growing: a dead host is not busy).
+  const working = all.filter((s) => s.openTurn && !staleTurn(s, now)).sort(byImportance)
+  if (working.length > 0) {
+    const top = working[0]
+    const extra = working.length > 1 ? ` (+${working.length - 1} more)` : ''
+    return { state: 'working', title: displayTitle(top), msg: `${top.activity}${extra}`, working: working.length }
+  }
+  const recent = all.sort(byImportance)[0]
+  if (!recent) return { state: 'idle', title: 'DeepSeek Harness', msg: 'no sessions yet', working: 0 }
+  return {
+    state: 'idle',
+    title: displayTitle(recent),
+    msg: all.length > 1 ? `${all.length} sessions · last: ${recent.activity}` : recent.activity,
+    working: 0,
+  }
+}
+
+async function writeState(mode, extra = {}) {
+  const agg = aggregate()
+  const list = [...sessions.values()]
+    .sort((a, b) => b.lastEventMs - a.lastEventMs)
+    .slice(0, MAX_LISTED_SESSIONS)
+    .map((s) => {
+      const blocked = blockedOf(s)
+      const stale = staleTurn(s)
+      return {
+        id: s.id,
+        title: displayTitle(s),
+        cwd: s.cwd,
+        preset: s.preset,
+        depth: s.depth,
+        status: blocked ? 'blocked' : s.openTurn && !stale ? 'working' : 'idle',
+        blockedReason: blocked ? blocked.kind : null,
+        activity: blocked ? blocked.msg : stale ? `stale: ${s.activity}` : s.activity,
+        turn: s.turn,
+        updatedMs: Math.round(s.lastEventMs),
+        lastTurnEndMs: s.lastTurnEndMs ? Math.round(s.lastTurnEndMs) : null,
+      }
+    })
+  const doc = {
+    version: 1,
+    updatedMs: Date.now(),
+    producer: 'dsh-herdr',
+    mode,
+    ...extra,
+    host: { url: DSH_URL_OVERRIDE || HOST_URL, herdr: IN_HERDR, osc: OSC },
+    aggregate: { state: agg.state, title: agg.title, msg: agg.msg, working: agg.working },
+    sessions: list,
+  }
+  try {
+    await fs.mkdir(path.dirname(STATE_PATH), { recursive: true })
+    const tmp = `${STATE_PATH}.tmp-${process.pid}`
+    await fs.writeFile(tmp, JSON.stringify(doc, null, 2), { mode: 0o600 })
+    await fs.rename(tmp, STATE_PATH)
+  } catch { /* best effort */ }
+}
+
+// ---------------------------------------------------------------- herdr attach
+
+function hcGet(pane) {
+  return new Promise((resolve) => {
+    try {
+      const child = spawn(HC_BIN, ['get', pane], { stdio: ['ignore', 'pipe', 'ignore'] })
+      let out = ''
+      child.stdout.on('data', (c) => { out += c })
+      child.on('error', () => resolve(null))
+      child.on('close', () => {
+        try { resolve(JSON.parse(out)) } catch { resolve(null) }
+      })
+    } catch { resolve(null) }
+  })
+}
+
+function hostAlive(pid) {
+  try { process.kill(pid, 0); return true } catch { return false }
+}
+
+/** The host's stdout terminal: /proc on Linux, `ps -o tty=` on macOS/BSD. */
+async function resolveHostTty(pid) {
+  let pty
+  try { pty = await fs.readlink(`/proc/${pid}/fd/1`) } catch { /* not Linux */ }
+  if (!pty) {
+    const tty = await new Promise((resolve) => {
+      try {
+        const child = spawn('ps', ['-p', String(pid), '-o', 'tty='], { stdio: ['ignore', 'pipe', 'ignore'] })
+        let out = ''
+        child.stdout.on('data', (chunk) => { out += chunk })
+        child.on('error', () => resolve(''))
+        child.on('close', () => resolve(out.trim()))
+      } catch { resolve('') }
+    })
+    if (!tty || tty === '?' || tty === '??') {
+      throw new Error(`cannot find the terminal of host pid ${pid} (is the dsh host running inside herdr-core?)`)
+    }
+    pty = tty.startsWith('/dev/') ? tty : `/dev/${tty}`
+  }
+  if (!pty.startsWith('/dev/')) {
+    throw new Error(`host pid ${pid} stdout is ${pty}, not a terminal; is the dsh host running inside herdr-core?`)
+  }
+  return pty
+}
+
+async function attachTarget() {
+  let pane = ATTACH_PANE
+  let pid = ATTACH_PID
+  let terminal = null
+  if (pane) {
+    terminal = await hcGet(pane)
+    if (terminal?.foreground?.pid && !pid) pid = terminal.foreground.pid
+  }
+  if (!pid) throw new Error('cannot resolve the dsh host pid: pass --host-pid or run inside its pane (HC_TERMINAL_ID)')
+  if (!hostAlive(pid)) throw new Error(`host pid ${pid} is not running`)
+  const pty = await resolveHostTty(pid)
+  let title = terminal?.title ?? ''
+  if (!terminal && pane) {
+    const t = await hcGet(pane)
+    title = t?.title ?? ''
+  }
+  return { pane: pane ?? `pid:${pid}`, pid, pty, title }
+}
+
+async function attachMain() {
+  const target = await attachTarget()
+
+  // One reporter per pane.
+  const lockPath = path.join(STATE_ROOT, `attach-${target.pane.replace(/[^a-z0-9]+/gi, '_')}.json`)
+  mkdirSync(STATE_ROOT, { recursive: true })
+  let existing = null
+  try { existing = JSON.parse(readFileSync(lockPath, 'utf8')) } catch { /* none */ }
+  if (existing?.pid && existing.pid !== process.pid && hostAlive(existing.pid)) {
+    if (!FORCE) {
+      process.stderr.write(`dsh-herdr: already attached to ${target.pane} (pid ${existing.pid}); use --force to replace it\n`)
+      process.exit(0)
+    }
+    try { process.kill(existing.pid, 'SIGTERM') } catch { /* gone */ }
+    await new Promise((r) => setTimeout(r, 300))
+  }
+
+  if (DAEMON && !DAEMON_CHILD) {
+    const args = ['attach', '--daemon-child', '--pane', target.pane, '--host-pid', String(target.pid),
+      '--state', STATE_PATH, '--log', ATTACH_LOG, '--interval', String(INTERVAL)]
+    if (QUIET) args.push('--quiet')
+    const child = spawn(process.execPath, [SCRIPT_PATH, ...args], { detached: true, stdio: 'ignore', cwd: HOME })
+    child.unref()
+    process.stdout.write(`dsh-herdr attach: reporting ${target.pane} (pid ${target.pid}, tty ${target.pty}) as "DeepSeek Harness"\n`
+      + `  daemon pid ${child.pid} · feed log ${ATTACH_LOG.replace(HOME, '~')} · state ${STATE_PATH.replace(HOME, '~')}\n`
+      + `  stop with: kill ${child.pid}\n`)
+    return
+  }
+
+  // Daemon child: feed goes to a log file.
+  if (DAEMON_CHILD) {
+    try { feedFileFd = openSync(ATTACH_LOG, 'a') } catch { feedFileFd = null }
+  }
+
+  await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, pane: target.pane, hostPid: target.pid, pty: target.pty, startedMs: Date.now() }))
+
+  let fd
+  try { fd = openSync(target.pty, 'w') } catch (error) {
+    throw new Error(`cannot write to ${target.pty}: ${error.message}`)
+  }
+  let closed = false
+  const writeTty = (s) => {
+    if (closed) return
+    try { writeSync(fd, s) } catch { /* tty gone */ }
+  }
+  const setTerminalTitle = (text) => writeTty(`\x1b]2;${text.replace(/[\x00-\x1f]/g, ' ')}\x1b\\`)
+
+  let lastState = ''
+  const report = (force) => {
+    const agg = aggregate()
+    const key = `${agg.state}\u0000${agg.title}\u0000${agg.msg}`
+    if (!force && key === lastReportKey) return
+    lastReportKey = key
+    writeTty(buildRecord(agg))
+    if (agg.state !== lastState) {
+      lastState = agg.state
+      // Keep the pane title useful: "DeepSeek Harness — <session>".
+      setTerminalTitle(`DeepSeek Harness — ${clip(agg.title, 60)}`)
+    }
+  }
+
+  const cleanup = (reason) => {
+    if (closed) return
+    report(true)
+    writeTty(oscRecord('state=clear'))
+    if (target.title !== undefined) writeTty(`\x1b]2;${String(target.title).replace(/[\x00-\x1f]/g, ' ')}\x1b\\`)
+    closed = true
+    closeSync(fd)
+    try { unlinkSync(lockPath) } catch { /* gone */ }
+    if (DAEMON_CHILD) writeFeed(`attach: stopped (${reason})`)
+    else writeStdout(dim(`dsh-herdr attach: stopped (${reason})\n`))
+    process.exit(0)
+  }
+  process.on('SIGINT', () => cleanup('SIGINT'))
+  process.on('SIGTERM', () => cleanup('SIGTERM'))
+  process.on('SIGHUP', () => cleanup('SIGHUP'))
+  process.on('exit', () => { if (!closed) { try { writeSync(fd, oscRecord('state=clear')) } catch { /* gone */ } } })
+
+  await refresh(true)
+  report(true)
+  await writeState('attach', { pane: target.pane, hostPid: target.pid, tty: target.pty })
+  writeFeed(`attach: ${target.pane} (pid ${target.pid}) → ${target.pty}`)
+  if (!DAEMON_CHILD) {
+    writeStdout(`${bold('dsh-herdr attach')} ${dim(`v${VERSION}`)} — reporting ${target.pane} (pid ${target.pid}) as "DeepSeek Harness"\n`
+      + `  tty ${target.pty} · state ${STATE_PATH.replace(HOME, '~')} · web GUI ${ansi('4', HOST_URL)}\n`
+      + `  ${dim('ctrl-c to detach')}\n`)
+  }
+
+  const timer = setInterval(async () => {
+    try {
+      if (!hostAlive(target.pid)) return cleanup('host exited')
+      await refresh(false)
+      report(false)
+      await writeState('attach', { pane: target.pane, hostPid: target.pid, tty: target.pty })
+    } catch { /* keep going */ }
+  }, INTERVAL)
+  const heartbeat = setInterval(() => { try { report(true) } catch { /* gone */ } }, 20000)
+  // The ref'd interval keeps the process alive; wait for a signal or host exit.
+  await new Promise(() => {})
+}
+
+// ---------------------------------------------------------------- daemon mode
+
+const DAEMON_LOG = path.join(STATE_ROOT, 'daemon.log')
+const DAEMON_INTERVAL = Math.max(1000, Number(flagValue('daemon-interval') || 3000) || 3000)
+
+function logLine(text) {
+  try {
+    mkdirSync(STATE_ROOT, { recursive: true })
+    const line = `${new Date().toISOString()} ${text}\n`
+    appendFileSyncSafe(DAEMON_LOG, line)
+    if (!QUIET) writeStdout(dim(`${line.trimEnd()}\n`))
+  } catch { /* best effort */ }
+}
+
+function appendFileSyncSafe(file, text) {
+  try {
+    const fd = openSync(file, 'a')
+    try { writeSync(fd, text) } finally { closeSync(fd) }
+  } catch { /* ignore */ }
+}
+
+function hcJson(args) {
+  return new Promise((resolve) => {
+    try {
+      const child = spawn(HC_BIN, args, { stdio: ['ignore', 'pipe', 'ignore'] })
+      let out = ''
+      child.stdout.on('data', (c) => { out += c })
+      child.on('error', () => resolve(null))
+      child.on('close', () => { try { resolve(JSON.parse(out)) } catch { resolve(null) } })
+    } catch { resolve(null) }
+  })
+}
+
+/** A dsh web host: node running the dsh launcher with `web` (or an app named *dsh*web*). */
+function looksLikeDshHost(fg) {
+  if (!fg || !Array.isArray(fg.argv)) return false
+  const argv = fg.argv.map(String)
+  const joined = argv.join(' ')
+  if (!/\bdsh\b/.test(joined) && !argv.some((a) => /\/dsh\/lib\/bin\.js$/.test(a))) return false
+  return argv.includes('web') || /\bweb\b/.test(fg.name ?? '')
+}
+
+function alivePid(pid) {
+  try { process.kill(pid, 0); return true } catch { return false }
+}
+
+function lockPathFor(pane) {
+  return path.join(STATE_ROOT, `attach-${pane.replace(/[^a-z0-9]+/gi, '_')}.json`)
+}
+
+function readLock(pane) {
+  try { return JSON.parse(readFileSync(lockPathFor(pane), 'utf8')) } catch { return null }
+}
+
+function spawnAttach(pane, hostPid) {
+  const args = [SCRIPT_PATH, 'attach', '--daemon-child', '--pane', pane, '--host-pid', String(hostPid),
+    '--state', STATE_PATH, '--log', ATTACH_LOG]
+  if (QUIET) args.push('--quiet')
+  const child = spawn(process.execPath, args, { detached: true, stdio: 'ignore', cwd: HOME })
+  child.unref()
+  logLine(`daemon: attached ${pane} (host pid ${hostPid}, reporter pid ${child.pid})`)
+}
+
+async function daemonMain() {
+  mkdirSync(STATE_ROOT, { recursive: true })
+  logLine(`daemon: started (interval ${DAEMON_INTERVAL}ms, state ${STATE_PATH})`)
+  if (!QUIET) {
+    writeStdout(`${bold('dsh-herdr daemon')} — keeping every dsh web pane in Herdr attached\n`)
+    writeStdout(dim(`  log ${DAEMON_LOG.replace(HOME, '~')} · state ${STATE_PATH.replace(HOME, '~')} · ctrl-c to stop\n`))
+  }
+  let stopped = false
+  const stop = (signal) => { stopped = true; logLine(`daemon: stopped (${signal})`); process.exit(0) }
+  process.on('SIGINT', () => stop('SIGINT'))
+  process.on('SIGTERM', () => stop('SIGTERM'))
+  process.on('SIGHUP', () => stop('SIGHUP'))
+
+  const tick = async () => {
+    if (stopped) return
+    const listing = await hcJson(['ls'])
+    const terminals = Array.isArray(listing?.terminals) ? listing.terminals : []
+    const seen = new Set()
+    for (const t of terminals) {
+      if (!t || t.state !== 'live') continue
+      if (String(t.address).includes('/')) continue // only local panes can be reported into
+      const facts = await hcJson(['get', String(t.address)])
+      if (!facts?.foreground || !looksLikeDshHost(facts.foreground)) continue
+      const pane = String(facts.address ?? t.address)
+      const hostPid = facts.foreground.pid
+      if (!hostPid) continue
+      seen.add(pane)
+      const lock = readLock(pane)
+      if (lock && lock.hostPid === hostPid && alivePid(lock.pid)) continue
+      if (lock && alivePid(lock.pid)) {
+        try { process.kill(lock.pid, 'SIGTERM') } catch { /* gone */ }
+      }
+      spawnAttach(pane, hostPid)
+    }
+    // Forget reporters for panes that no longer host dsh.
+    try {
+      for (const name of await fs.readdir(STATE_ROOT)) {
+        const match = /^attach-(.+)\.json$/.exec(name)
+        if (!match) continue
+        const paneRaw = match[1]
+        const lock = readLock(paneRaw)
+        if (!lock) continue
+        if (!alivePid(lock.pid)) { try { unlinkSync(lockPathFor(paneRaw)) } catch { /* gone */ } continue }
+        if (!seen.has(paneRaw) && !String(lock.pane ?? '').includes('/')) {
+          // Its host may have exited; the reporter cleans itself up, but be safe once it is gone.
+          if (!alivePid(lock.hostPid)) { try { process.kill(lock.pid, 'SIGTERM') } catch { /* gone */ } }
+        }
+      }
+    } catch { /* state dir missing */ }
+  }
+
+  await tick()
+  const timer = setInterval(() => { tick().catch(() => {}) }, DAEMON_INTERVAL)
+  // keep the event loop alive; nothing else to await
+  await new Promise(() => { void timer })
+}
+
+// ---------------------------------------------------------------- watch mode
+
+async function watchMain() {
+  await refresh(true)
+  const report = (force) => {
+    if (!OSC) return
+    const agg = aggregate()
+    const key = `${agg.state}\u0000${agg.title}\u0000${agg.msg}`
+    if (!force && key === lastReportKey) return
+    lastReportKey = key
+    writeStdout(buildRecord(agg))
+  }
+  report(true)
+  await writeState('watch')
+
+  if (ONCE) {
+    const agg = aggregate()
+    const out = {
+      in_herdr: IN_HERDR,
+      osc: OSC,
+      state_path: STATE_PATH,
+      aggregate: agg,
+      sessions: [...sessions.values()].map((s) => ({
+        id: s.id, title: displayTitle(s), cwd: s.cwd,
+        status: s.openTurn ? 'working' : 'idle', activity: s.activity, updatedMs: Math.round(s.lastEventMs),
+      })),
+    }
+    process.stdout.write(JSON.stringify(out, null, 2) + '\n')
+    return
+  }
+
+  if (!QUIET) {
+    writeStdout(`${bold('dsh-herdr')} ${dim(`v${VERSION}`)} — watching ${sessions.size} session(s) in ${dim(SESSIONS_ROOT)}\n`)
+    const agg = aggregate()
+    writeStdout(`  herdr reporting: ${OSC ? ansi('32', 'on') : ansi('33', 'off (no HC_TERMINAL_ID)')}`
+      + ` · state file: ${dim(STATE_PATH.replace(HOME, '~'))} · web GUI: ${ansi('4', HOST_URL)}\n`)
+    writeStdout(`  now: ${ansi(agg.state === 'working' ? '32' : '2', agg.state)} — ${clip(agg.title, 70)} ${dim(`· ${clip(agg.msg, 60)}`)}\n`)
+    writeStdout(dim('  (read-only: this never writes to DSH; ctrl-c to stop)\n\n'))
+  }
+
+  const stop = (signal) => {
+    if (OSC) writeStdout(oscRecord('state=clear'))
+    if (!QUIET) writeStdout(dim(`\ndsh-herdr: stopped (${signal})\n`))
+    process.exit(0)
+  }
+  process.on('SIGINT', () => stop('SIGINT'))
+  process.on('SIGTERM', () => stop('SIGTERM'))
+  process.on('SIGHUP', () => stop('SIGHUP'))
+
+  setInterval(async () => {
+    try {
+      await refresh(false)
+      report(false)
+      await writeState('watch')
+    } catch { /* keep monitoring */ }
+  }, INTERVAL)
+  setInterval(() => report(true), 20000)
+}
+
+// ---------------------------------------------------------------- main
+
+async function runInstaller(args) {
+  const { spawnSync } = await import('node:child_process')
+  const installer = path.join(path.dirname(SCRIPT_PATH), '..', 'install.sh')
+  if (!existsSync(installer)) {
+    throw new Error(`installer not found at ${installer}; run ./install.sh from the repository instead`)
+  }
+  const child = spawnSync('bash', [installer, ...args], { stdio: 'inherit' })
+  process.exit(child.status ?? 1)
+}
+const entry = command === 'attach' ? attachMain
+  : command === 'daemon' ? daemonMain
+  : command === 'install' ? () => runInstaller(rest.filter((a) => a.startsWith('--')))
+  : command === 'uninstall' ? () => runInstaller(['--uninstall'])
+  : watchMain
+entry().catch((error) => {
+  process.stderr.write(`dsh-herdr: ${error?.message || error}\n`)
+  process.exit(1)
+})

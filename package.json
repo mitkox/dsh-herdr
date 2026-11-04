@@ -1,0 +1,64 @@
+{
+  "name": "@mitkox/dsh-herdr",
+  "version": "0.2.0",
+  "description": "See and monitor DeepSeek Harness (dsh) agents inside Herdr — agent status over OSC 7501, a live Herdr panel, and an optional native DSH host plugin.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "dsh-herdr": "bin/dsh-herdr"
+  },
+  "files": [
+    "bin/",
+    "install.sh",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "app/install.sh",
+    "app/programs.json",
+    "app/README.md",
+    "app/screenshots/",
+    "app/mods/dsh-monitor/main.js",
+    "app/mods/dsh-monitor/mod.json",
+    "app/mods/dsh-monitor/dev-sample.json",
+    "app/mods/dsh-monitor/dsh-tui.svg",
+    "app/mods/dsh-monitor/spinner.svg",
+    "plugin/index.js",
+    "plugin/cordis.patch.yml",
+    "plugin/package.json",
+    "plugin/install.sh",
+    "plugin/README.md",
+    "plugin/STATE-SCHEMA.md",
+    "plugin/TESTING.md",
+    "plugin/test/drive.mjs",
+    "plugin/evidence/",
+    "monitor/"
+  ],
+  "engines": {
+    "node": ">=22.15.0"
+  },
+  "scripts": {
+    "test": "bash tests/run.sh",
+    "check": "bash tests/check-syntax.sh"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek",
+    "deepseek-harness",
+    "herdr",
+    "herdr-core",
+    "agent",
+    "monitor",
+    "osc-7501",
+    "terminal"
+  ],
+  "author": "Mitko Vasilev <43349905+mitkox@users.noreply.github.com>",
+  "contributors": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mitkox/dsh-herdr.git"
+  },
+  "homepage": "https://github.com/mitkox/dsh-herdr#readme",
+  "bugs": {
+    "url": "https://github.com/mitkox/dsh-herdr/issues"
+  }
+}

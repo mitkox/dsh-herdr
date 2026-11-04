@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "schemaVersion": 1,
+  "updatedMs": 1793793135899,
+  "producer": "dsh-plugin-herdr",
+  "mode": "plugin",
+  "pane": "t8",
+  "hostPid": 236027,
+  "tty": "/dev/stdout (tty)",
+  "host": {
+    "url": "http://127.0.0.1:3181",
+    "pid": 236027,
+    "terminalId": "t8",
+    "herdr": true,
+    "profile": "web",
+    "osc": true,
+    "startedMs": 1793793035884
+  },
+  "aggregate": {
+    "state": "idle",
+    "title": "PHASE ONE respond with the",
+    "msg": null,
+    "working": 0
+  },
+  "sessions": [
+    {
+      "id": "session-25fa78d0-98e8-4ab2-97a5-a1c8ae306026",
+      "title": "PHASE ONE respond with the",
+      "cwd": "/tmp/herdr-e2e/work",
+      "preset": "standard",
+      "depth": 0,
+      "status": "idle",
+      "activity": "waiting for activity…",
+      "turn": 1,
+      "updatedMs": 1793793099853,
+      "lastTurnEndMs": 1793793099853
+    },
+    {
+      "id": "session-a3bcb468-0f7a-4a90-b519-49ec20dd069c",
+      "title": "PHASE TWO ask the user",
+      "cwd": "/tmp/herdr-e2e/work",
+      "preset": "standard",
+      "depth": 0,
+      "status": "idle",
+      "activity": "waiting for activity…",
+      "turn": 1,
+      "updatedMs": 1793793072316,
+      "lastTurnEndMs": 1793793072316
+    }
+  ]
+}

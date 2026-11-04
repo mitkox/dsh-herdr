@@ -1,0 +1,3 @@
+hc version: hc 0.1.17
+dsh version: 0.2.2-rc.1
+herdr-app: herdr-app 0.1.12

@@ -1,0 +1,14 @@
+# herdr-status bundle layer: mounts the DSH host plugin that reports this
+# Harness host to herdr-core over OSC 7501 and writes state/dsh-agents.json.
+#
+# The row is inserted with no config so it works in any profile; a profile's
+# own cordis.patch.yml may override it by id:
+#
+#   - id: herdr-status
+#     config:
+#       stateFile: /absolute/path/to/dsh-agents.json
+#
+# `config` is optional. Env fallbacks and defaults are documented in README.md.
+- insert:
+    - id: herdr-status
+      name: dsh-plugin-herdr

@@ -1,0 +1,10 @@
+{
+  "place": "none",
+  "title": "DSH",
+  "overlay": {
+    "kind": "window",
+    "width": 420,
+    "height": 400,
+    "key": "dsh-monitor"
+  }
+}

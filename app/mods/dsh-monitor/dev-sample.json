@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "updatedMs": 1793792120000,
+  "host": {
+    "url": "http://127.0.0.1:3080",
+    "profile": "web",
+    "herdr": true,
+    "terminalId": "t2"
+  },
+  "sessions": [
+    {
+      "id": "session-7f3a1c2d",
+      "title": "Refactor herdr-app programs.json merge",
+      "status": "working",
+      "activity": "running bash: pnpm -C apps/web test",
+      "cwd": "/home/you/src/acme-app",
+      "updatedMs": 1793792119000
+    },
+    {
+      "id": "session-2b9e4a10",
+      "title": "CI failure triage on main",
+      "status": "blocked",
+      "activity": "waiting for approval: bash",
+      "blockedReason": "approval",
+      "cwd": "/home/you/src/herdr",
+      "updatedMs": 1793792110000
+    },
+    {
+      "id": "session-c01d55ee",
+      "title": "Write installer README",
+      "status": "idle",
+      "activity": null,
+      "cwd": "/home/you/src/acme-app",
+      "updatedMs": 1793791800000
+    }
+  ]
+}

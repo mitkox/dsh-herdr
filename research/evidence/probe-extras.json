@@ -1,0 +1,536 @@
+{
+  "probe": "probe_extras.py",
+  "hc_version": "hc 0.1.17",
+  "session": "proto1",
+  "generated_at": "2026-11-04T13:44:24+0200",
+  "results": [
+    {
+      "id": "hc-events",
+      "desc": "hc events: snapshot line, then status/turn fact lines",
+      "snapshot_sample": {
+        "channel": null,
+        "seq": 3970,
+        "terminals": [
+          {
+            "address": "t17g",
+            "argv": [
+              "python3",
+              "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+              "--auto"
+            ],
+            "cols": 200,
+            "created_ms": 1793792664237,
+            "cwd": "/home/you/src/dsh-research/probes",
+            "die_with_parent": false,
+            "exit_code": null,
+            "finished_ms": null,
+            "identity": "ghostty",
+            "keep": false,
+            "labels": {},
+            "name": "ev",
+            "notify": true,
+            "parent": null,
+            "pid": 187178,
+            "reason": null,
+            "reported": true,
+            "rm": false,
+            "rows": 120,
+            "screen": "exact",
+            "signal": null,
+            "state": "live",
+            "status": {
+              "app": "dsh-tui",
+              "msg": "waiting for a task",
+              "state": "idle",
+              "title": "DSH · main"
+            },
+            "status_ms": 1793792664245,
+            "template": null,
+            "title": "",
+            "turn": 0
+          }
+        ]
+      },
+      "event_types": [
+        "foreground",
+        "status",
+        "turn"
+      ],
+      "status_events": [
+        {
+          "data": {
+            "records": {},
+            "reported": true,
+            "status": {
+              "app": "dsh-tui",
+              "msg": "running a turn",
+              "state": "working",
+              "title": "DSH · main"
+            }
+          },
+          "seq": 3972,
+          "terminal": "t17g",
+          "type": "status"
+        },
+        {
+          "data": {
+            "records": {},
+            "reported": true,
+            "status": {
+              "app": "dsh-tui",
+              "kind": "permission",
+              "msg": "Approve? run: rm -rf build",
+              "state": "blocked",
+              "title": "DSH · main"
+            }
+          },
+          "seq": 3973,
+          "terminal": "t17g",
+          "type": "status"
+        },
+        {
+          "data": {
+            "records": {},
+            "reported": true,
+            "status": {
+              "app": "dsh-tui",
+              "msg": "turn finished: 3 edits",
+              "state": "done",
+              "title": "DSH · main"
+            }
+          },
+          "seq": 3975,
+          "terminal": "t17g",
+          "type": "status"
+        }
+      ],
+      "turn_events": [
+        {
+          "data": {
+            "state": "blocked",
+            "turn": 1
+          },
+          "seq": 3974,
+          "terminal": "t17g",
+          "type": "turn"
+        }
+      ],
+      "all_events_sample": [
+        {
+          "data": {
+            "argv": [
+              "python3",
+              "/home/you/src/dsh-research/probes/fake_dsh_agent.py",
+              "--auto"
+            ],
+            "cwd": "/home/you/src/dsh-research/probes",
+            "name": "python3",
+            "pid": 187178
+          },
+          "seq": 3971,
+          "terminal": "t17g",
+          "type": "foreground"
+        },
+        {
+          "data": {
+            "records": {},
+            "reported": true,
+            "status": {
+              "app": "dsh-tui",
+              "msg": "running a turn",
+              "state": "working",
+              "title": "DSH · main"
+            }
+          },
+          "seq": 3972,
+          "terminal": "t17g",
+          "type": "status"
+        },
+        {
+          "data": {
+            "records": {},
+            "reported": true,
+            "status": {
+              "app": "dsh-tui",
+              "kind": "permission",
+              "msg": "Approve? run: rm -rf build",
+              "state": "blocked",
+              "title": "DSH · main"
+            }
+          },
+          "seq": 3973,
+          "terminal": "t17g",
+          "type": "status"
+        },
+        {
+          "data": {
+            "state": "blocked",
+            "turn": 1
+          },
+          "seq": 3974,
+          "terminal": "t17g",
+          "type": "turn"
+        },
+        {
+          "data": {
+            "records": {},
+            "reported": true,
+            "status": {
+              "app": "dsh-tui",
+              "msg": "turn finished: 3 edits",
+              "state": "done",
+              "title": "DSH · main"
+            }
+          },
+          "seq": 3975,
+          "terminal": "t17g",
+          "type": "status"
+        },
+        {
+          "data": {
+            "records": {},
+            "reported": true,
+            "status": {
+              "app": "dsh-tui",
+              "msg": "ready for the next task",
+              "state": "idle",
+              "title": "DSH · main"
+            }
+          },
+          "seq": 3976,
+          "terminal": "t17g",
+          "type": "status"
+        }
+      ],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "hc-wait",
+      "desc": "hc wait blocks until the root record stops working",
+      "wait_command": "hc wait --json t17h",
+      "stdout": "{\"children\":[],\"ended\":true,\"exit_code\":null,\"reason\":\"status\",\"signal\":null,\"status\":\"idle\",\"terminal\":\"t17h\",\"turn\":1}",
+      "result": {
+        "children": [],
+        "ended": true,
+        "exit_code": null,
+        "reason": "status",
+        "signal": null,
+        "status": "idle",
+        "terminal": "t17h",
+        "turn": 1
+      },
+      "elapsed_s": 1.21,
+      "terminal_after": {
+        "app": "dsh-tui",
+        "state": "idle"
+      },
+      "turn_after": 1,
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "query",
+      "desc": "OSC 7501 `?` feature-detection reply",
+      "query_hex": "1b5d373530313b3f07",
+      "reply_hex": "1b5d373530313b3f3a7374617465733d69646c652c776f726b696e672c646f6e652c626c6f636b65642c6572726f723a6b696e64733d7065726d697373696f6e2c7175657374696f6e2c6175746807",
+      "reply_ascii": "\u001b]7501;?:states=idle,working,done,blocked,error:kinds=permission,question,auth\u0007",
+      "expected_hex": "1b5d373530313b3f3a7374617465733d69646c652c776f726b696e672c646f6e652c626c6f636b65642c6572726f723a6b696e64733d7065726d697373696f6e2c7175657374696f6e2c6175746807",
+      "matches_expected": true,
+      "pass": true,
+      "failures": []
+    },
+    {
+      "id": "templates",
+      "desc": "template readiness: waits for first OSC 7501; one-shot cannot receive the task",
+      "observed": {
+        "templates_dir": "/tmp/proto1/config/herdr-core/templates",
+        "templates_listing": "{\"templates\":[{\"command\":\"python3 /home/you/src/dsh-research/probes/fake_dsh_agent.py\",\"description\":\"Fake DSH agent for OSC 7501 readiness probes\",\"name\":\"fake-dsh\"},{\"command\":\"python3 -c \\\"import os; os.write(1, b'\\\\x1b]7501;state=done:app=dsh-tui\\\\x07'); \\\"\",\"description\":\"One-shot program that reports done and exits\",\"name\":\"oneshot\"}]}\n",
+        "interactive_run": {
+          "address": "t17k",
+          "agent": "sh",
+          "cwd": "/home/you/src/dsh-research/probes",
+          "first_message": {
+            "sent": true,
+            "started": true,
+            "turn": 0
+          },
+          "name": "tpl",
+          "state": "live",
+          "template": "fake-dsh",
+          "turn": 0
+        },
+        "interactive_screen": "\nA-READY\nYou are a fake DSH agent used only by a research probe.\n\nadd a README\nB-TASK:You are a fake DSH agent used only by a research probe.\\n\n\nC-WORKING\n",
+        "interactive_status_working": {
+          "status": {
+            "app": "dsh-tui",
+            "msg": "running: You are a fake DSH agent used only by a research probe.",
+            "state": "working",
+            "title": "DSH · main"
+          },
+          "records": {},
+          "reported": true,
+          "turn": 0,
+          "status_ms": 1793792670032,
+          "state": "live",
+          "_get": {
+            "address": "t17k",
+            "argv": [
+              "sh",
+              "-c",
+              "python3 /home/you/src/dsh-research/probes/fake_dsh_agent.py"
+            ],
+            "cols": 200,
+            "created_ms": 1793792669204,
+            "cwd": "/home/you/src/dsh-research/probes",
+            "die_with_parent": false,
+            "exit_code": null,
+            "finished_ms": null,
+            "foreground": {
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py"
+              ],
+              "cwd": "/home/you/src/dsh-research/probes",
+              "name": "python3",
+              "pid": 188180
+            },
+            "identity": "ghostty",
+            "keep": false,
+            "labels": {},
+            "name": "tpl",
+            "notify": true,
+            "parent": null,
+            "pid": 188180,
+            "reason": null,
+            "reported": true,
+            "rm": false,
+            "rows": 120,
+            "screen": "exact",
+            "signal": null,
+            "state": "live",
+            "status": {
+              "app": "dsh-tui",
+              "msg": "running: You are a fake DSH agent used only by a research probe.",
+              "state": "working",
+              "title": "DSH · main"
+            },
+            "status_ms": 1793792670032,
+            "template": "fake-dsh",
+            "title": "",
+            "turn": 0
+          }
+        },
+        "interactive_status_blocked": {
+          "status": {
+            "app": "dsh-tui",
+            "kind": "permission",
+            "msg": "Approve? edit src/x.rs",
+            "state": "blocked",
+            "title": "DSH · main"
+          },
+          "records": {},
+          "reported": true,
+          "turn": 1,
+          "status_ms": 1793792670532,
+          "state": "live",
+          "_get": {
+            "address": "t17k",
+            "argv": [
+              "sh",
+              "-c",
+              "python3 /home/you/src/dsh-research/probes/fake_dsh_agent.py"
+            ],
+            "cols": 200,
+            "created_ms": 1793792669204,
+            "cwd": "/home/you/src/dsh-research/probes",
+            "die_with_parent": false,
+            "exit_code": null,
+            "finished_ms": null,
+            "foreground": {
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py"
+              ],
+              "cwd": "/home/you/src/dsh-research/probes",
+              "name": "python3",
+              "pid": 188180
+            },
+            "identity": "ghostty",
+            "keep": false,
+            "labels": {},
+            "name": "tpl",
+            "notify": true,
+            "parent": null,
+            "pid": 188180,
+            "reason": null,
+            "reported": true,
+            "rm": false,
+            "rows": 120,
+            "screen": "exact",
+            "signal": null,
+            "state": "live",
+            "status": {
+              "app": "dsh-tui",
+              "kind": "permission",
+              "msg": "Approve? edit src/x.rs",
+              "state": "blocked",
+              "title": "DSH · main"
+            },
+            "status_ms": 1793792670532,
+            "template": "fake-dsh",
+            "title": "",
+            "turn": 1
+          }
+        },
+        "interactive_status_after_approval": {
+          "status": {
+            "app": "dsh-tui",
+            "msg": "applying",
+            "state": "working",
+            "title": "DSH · main"
+          },
+          "records": {},
+          "reported": true,
+          "turn": 1,
+          "status_ms": 1793792671568,
+          "state": "live",
+          "_get": {
+            "address": "t17k",
+            "argv": [
+              "sh",
+              "-c",
+              "python3 /home/you/src/dsh-research/probes/fake_dsh_agent.py"
+            ],
+            "cols": 200,
+            "created_ms": 1793792669204,
+            "cwd": "/home/you/src/dsh-research/probes",
+            "die_with_parent": false,
+            "exit_code": null,
+            "finished_ms": null,
+            "foreground": {
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py"
+              ],
+              "cwd": "/home/you/src/dsh-research/probes",
+              "name": "python3",
+              "pid": 188180
+            },
+            "identity": "ghostty",
+            "keep": false,
+            "labels": {},
+            "name": "tpl",
+            "notify": true,
+            "parent": null,
+            "pid": 188180,
+            "reason": null,
+            "reported": true,
+            "rm": false,
+            "rows": 120,
+            "screen": "exact",
+            "signal": null,
+            "state": "live",
+            "status": {
+              "app": "dsh-tui",
+              "msg": "applying",
+              "state": "working",
+              "title": "DSH · main"
+            },
+            "status_ms": 1793792671568,
+            "template": "fake-dsh",
+            "title": "",
+            "turn": 1
+          }
+        },
+        "interactive_status_final": {
+          "status": {
+            "app": "dsh-tui",
+            "msg": "ready for the next task",
+            "state": "idle",
+            "title": "DSH · main"
+          },
+          "records": {},
+          "reported": true,
+          "turn": 2,
+          "status_ms": 1793792672568,
+          "state": "live",
+          "_get": {
+            "address": "t17k",
+            "argv": [
+              "sh",
+              "-c",
+              "python3 /home/you/src/dsh-research/probes/fake_dsh_agent.py"
+            ],
+            "cols": 200,
+            "created_ms": 1793792669204,
+            "cwd": "/home/you/src/dsh-research/probes",
+            "die_with_parent": false,
+            "exit_code": null,
+            "finished_ms": null,
+            "foreground": {
+              "argv": [
+                "python3",
+                "/home/you/src/dsh-research/probes/fake_dsh_agent.py"
+              ],
+              "cwd": "/home/you/src/dsh-research/probes",
+              "name": "python3",
+              "pid": 188180
+            },
+            "identity": "ghostty",
+            "keep": false,
+            "labels": {},
+            "name": "tpl",
+            "notify": true,
+            "parent": null,
+            "pid": 188180,
+            "reason": null,
+            "reported": true,
+            "rm": false,
+            "rows": 120,
+            "screen": "exact",
+            "signal": null,
+            "state": "live",
+            "status": {
+              "app": "dsh-tui",
+              "msg": "ready for the next task",
+              "state": "idle",
+              "title": "DSH · main"
+            },
+            "status_ms": 1793792672568,
+            "template": "fake-dsh",
+            "title": "",
+            "turn": 2
+          }
+        },
+        "interactive_first_message": {
+          "sent": true,
+          "started": true,
+          "turn": 0
+        },
+        "oneshot_run": {
+          "address": "t17m",
+          "agent": "sh",
+          "cwd": "/home/you/src/dsh-research/probes",
+          "first_message": {
+            "reason": "t17m has finished",
+            "sent": false
+          },
+          "name": "oneshot",
+          "state": "live",
+          "template": "oneshot",
+          "turn": 0
+        },
+        "oneshot_get": {
+          "state": "finished",
+          "status": null,
+          "reported": true,
+          "turn": 0,
+          "first_message": null
+        }
+      },
+      "pass": true,
+      "failures": []
+    }
+  ]
+}

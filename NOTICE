@@ -1,0 +1,23 @@
+dsh-herdr
+Copyright 2026 the dsh-herdr contributors
+
+This product includes software and assets from the Herdr project:
+
+  herdr-app — https://github.com/herdrdev/herdr-app
+  Copyright the Herdr authors
+  Licensed under the Apache License, Version 2.0
+
+Specifically:
+  - app/mods/dsh-monitor/dsh-tui.svg is the "DeepSeek" program icon copied
+    unmodified from herdr-app's defaults/icons/dsh-tui.svg.
+  - The OSC 7501 terminal status protocol and its documented semantics are
+    implemented against herdr-core; research/herdr-protocol.md cites and
+    describes that protocol. herdr-core:
+    https://github.com/herdrdev/herdr-core (Apache License, Version 2.0)
+
+This project integrates with, but does not redistribute, DeepSeek Harness
+(https://github.com/deepseek-ai/deepseek-harness, MIT License).
+
+The community package dsh-tui (https://github.com/MashedPotato817/dsh-tui,
+MIT License) was evaluated for feasibility while designing this integration;
+no code from it is included here. See monitor/README.md.
