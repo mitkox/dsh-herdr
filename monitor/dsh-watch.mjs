@@ -194,12 +194,12 @@ async function main() {
 	const first = await journal.refresh();
 	const snap0 = journal.snapshot();
 	process.stdout.write(`${colors.bold('◈ dsh-watch')} ${colors.gray('— one DSH session, read-only journal tail')}\n`);
-	process.stdout.write(`${colors.gray('journal')} ${file}\n`);
+	process.stdout.write(`${colors.gray('journal')} ${truncate(file, 2048)}\n`);
 	process.stdout.write(
 		`${colors.gray('herdr  ')} ${oscEnabled ? colors.green(`reporting as app=${opts.app} via OSC 7501`) : colors.gray(herdr ? 'herdr env found but stdout is not a TTY — OSC disabled (use --osc to force)' : 'not in a herdr terminal — OSC disabled')}\n`,
 	);
 	process.stdout.write(`${colors.gray('title  ')} ${colors.bold(snap0.title)}\n`);
-	process.stdout.write(`${colors.gray('session')} ${snap0.sessionId}${snap0.cwd ? colors.gray(`  cwd=${snap0.cwd}`) : ''}\n`);
+	process.stdout.write(`${colors.gray('session')} ${truncate(snap0.sessionId, 120)}${snap0.cwd ? colors.gray(`  cwd=${snap0.cwd}`) : ''}\n`);
 	process.stdout.write('\n');
 
 	const initial = first.events.length > opts.history ? first.events.slice(-opts.history) : first.events;
@@ -225,7 +225,7 @@ async function main() {
 	else process.stdout.write(`${colors.gray(`watching… (poll ${opts.pollMs}ms)`)}\n\n`);
 
 	if (opts.once) {
-		process.stdout.write(`${colors.gray('final status:')} ${snap.status} — ${snap.activity}\n`);
+		process.stdout.write(`${colors.gray('final status:')} ${snap.status} — ${truncate(snap.activity, 200)}\n`);
 		osc.close();
 		return;
 	}

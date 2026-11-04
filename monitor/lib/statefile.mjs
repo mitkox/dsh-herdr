@@ -110,18 +110,19 @@ export class StateFileWriter {
 		let rows = snapshots.map((snapshot) => (snapshot.id ? snapshot : toStateSession(snapshot)));
 		rows = rows.map(({ source = 'log-tail', ...row }) => ({ ...row, source }));
 		rows = sortSessions(rows).slice(0, this.maxSessions);
-		const payload = JSON.stringify({
+		const content = {
 			schemaVersion: STATE_SCHEMA_VERSION,
-			updatedMs: now,
 			producer: 'dsh-monitor-sidecar',
 			host: this.host,
 			sessions: rows,
-		}, null, 2);
-		const changed = payload !== this._lastPayload;
+		};
+		const key = JSON.stringify(content);
+		const changed = key !== this._lastPayload;
 		if (!changed && now - this._lastWriteAt < this.heartbeatMs) return false;
 		try {
+			const payload = JSON.stringify({ ...content, updatedMs: now }, null, 2);
 			this.#write(payload);
-			this._lastPayload = payload;
+			this._lastPayload = key;
 			this._lastWriteAt = now;
 			this.writes += 1;
 			this.lastError = null;
@@ -135,7 +136,7 @@ export class StateFileWriter {
 	#write(payload) {
 		mkdirSync(dirname(this.path), { recursive: true });
 		const tmp = `${this.path}.tmp-${process.pid}`;
-		writeFileSync(tmp, `${payload}\n`, 'utf8');
+		writeFileSync(tmp, `${payload}\n`, { encoding: 'utf8', mode: 0o600 });
 		try {
 			renameSync(tmp, this.path);
 		} catch (error) {

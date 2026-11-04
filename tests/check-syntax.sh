@@ -10,7 +10,7 @@ done < <(find "$ROOT" -name '*.sh' -not -path '*/node_modules/*' -not -path '*/.
 
 echo "— JavaScript syntax"
 node --check "$ROOT/bin/dsh-herdr"
-for file in "$ROOT"/monitor/*.mjs "$ROOT"/monitor/lib/*.mjs "$ROOT"/monitor/tests/*.mjs; do
+for file in "$ROOT"/monitor/*.mjs "$ROOT"/monitor/lib/*.mjs "$ROOT"/monitor/tests/*.mjs "$ROOT"/app/*.mjs "$ROOT"/tests/*.mjs; do
   [ -f "$file" ] && node --check "$file"
 done
 [ -f "$ROOT/plugin/index.js" ] && node --check "$ROOT/plugin/index.js"

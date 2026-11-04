@@ -35,34 +35,7 @@ install)
   echo "installed $mod_dst"
 
   # 2. programs.json: our entries fill gaps; your values win.
-  DST="$programs" SRC="$here/programs.json" node <<'JS'
-    const fs = require("node:fs")
-    const path = require("node:path")
-    const target = process.env.DST
-    const src = JSON.parse(fs.readFileSync(process.env.SRC, "utf8"))
-    let base = {}
-    if (fs.existsSync(target)) {
-      try {
-        base = JSON.parse(fs.readFileSync(target, "utf8"))
-      } catch {
-        const backup = `${target}.corrupt-${Date.now()}`
-        fs.renameSync(target, backup)
-        console.log(`warning: ${target} was not valid JSON; kept it as ${backup}`)
-        base = {}
-      }
-    }
-    if (typeof base !== "object" || base === null || Array.isArray(base)) base = {}
-    const programs = typeof base.programs === "object" && base.programs !== null ? base.programs : (base.programs = {})
-    for (const [key, entry] of Object.entries(src.programs || {})) {
-      const existing = programs[key]
-      programs[key] = { ...entry, ...(existing && typeof existing === "object" ? existing : {}) }
-    }
-    const data = JSON.stringify(base, null, 2) + "\n"
-    const tmp = path.join(path.dirname(target) || ".", `.programs-${process.pid}.json`)
-    fs.writeFileSync(tmp, data)
-    fs.renameSync(tmp, target)
-    console.log(`merged program entries into ${target}: ${Object.keys(src.programs || {}).join(", ")}; existing entries kept`)
-JS
+  node "$here/programs.mjs" install "$programs" "$here/programs.json"
 
   # 3. Verify: the app must accept the mod, and the program table must load.
   herdr-app check "$mod_dst"
@@ -86,21 +59,7 @@ EOF
   ;;
 --uninstall | uninstall)
   if [[ -f $programs ]]; then
-    PROGRAMS="$programs" node <<'JS'
-      const fs = require("node:fs")
-      const path = require("node:path")
-      const target = process.env.PROGRAMS
-      let base
-      try { base = JSON.parse(fs.readFileSync(target, "utf8")) } catch { process.exit(0) }
-      if (base && typeof base === "object" && base.programs && typeof base.programs === "object") {
-        for (const key of ["dsh-tui", "dsh-herdr"]) delete base.programs[key]
-        if (Object.keys(base.programs).length === 0) delete base.programs
-      }
-      const tmp = path.join(path.dirname(target), `.programs-${process.pid}.json`)
-      fs.writeFileSync(tmp, JSON.stringify(base, null, 2) + "\n")
-      fs.renameSync(tmp, target)
-      console.log(`removed dsh-tui/dsh-herdr entries from ${target}; the rest is untouched`)
-JS
+    node "$here/programs.mjs" uninstall "$programs"
   fi
   rm -rf -- "$mod_dst"
   echo "removed $mod_dst"

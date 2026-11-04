@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-04",
+  "source": "temporary synthetic journals and scratch installation homes",
+  "checks": {
+    "launcher_smoke_tests": 8,
+    "node_regression_tests": 19,
+    "shellcheck": "passed",
+    "herdr_app_check": "passed",
+    "package_installer_helper": "included"
+  },
+  "herdr": {
+    "isolated_core": true,
+    "producer": "bin/dsh-herdr watch",
+    "asserted_terminal_and_state_transitions": [
+      "idle",
+      "working",
+      "blocked/permission",
+      "idle",
+      "blocked/question",
+      "idle"
+    ]
+  },
+  "negative_probe": "incorrect reported state rejected",
+  "native_plugin": "question result IDs, permission resolution, disabled mount, dispose, private debug output",
+  "installation": "repeat install, installed-command removal, customization preservation, native-plugin linked payload retained"
+}

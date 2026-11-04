@@ -268,7 +268,7 @@ async function main() {
 	const firstAgg = reportOsc();
 
 	if (opts.once) {
-		process.stdout.write(`${colors.gray('aggregate:')} ${firstAgg.status} — ${firstAgg.title}${firstAgg.msg ? ` — ${firstAgg.msg}` : ''}\n`);
+		process.stdout.write(`${colors.gray('aggregate:')} ${firstAgg.status} — ${truncate(firstAgg.title, 192)}${firstAgg.msg ? ` — ${truncate(firstAgg.msg, 2048)}` : ''}\n`);
 		process.stdout.write(`${colors.gray('state write:')} ${stateWriter ? (stateWriter.writes > 0 ? 'ok ' + statePath : 'FAILED ' + stateWriter.lastError) : 'disabled'}\n`);
 		osc.close();
 		return;

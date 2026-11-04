@@ -93,6 +93,14 @@ merges two entries into `~/.config/herdr-app/programs.json` (backing it up),
 and starts `dsh-herdr daemon` so any `dsh web` pane is picked up and re-attached
 when the host restarts.
 
+Support files are kept under `${XDG_DATA_HOME:-~/.local/share}/dsh-herdr`, so
+the installed `dsh-herdr uninstall` command works after the checkout moves.
+Uninstall removes only program fields added by this integration and preserves
+existing custom entries and later edits. The original `programs.json.dsh-herdr.bak`
+is retained for manual recovery.
+Native plugin files are retained for its separate uninstall step; removing the
+monitor does not break the DSH profile.
+
 Options: `--start` · `--systemd` (Linux; keeps reporting across
 reboots) · `--plugin` (also install the native DSH host plugin into a new `herdr`
 profile) · `--uninstall`.

@@ -205,7 +205,7 @@ export class SessionJournal {
 		this._size = -1;
 		this._mtimeMs = -1;
 		this._lineCount = 0;
-		this._lastGoodText = '';
+		this._lastGoodTextLength = 0;
 		this.missing = false;
 		this.decodeErrors = 0;
 	}
@@ -229,13 +229,13 @@ export class SessionJournal {
 			return { changed: false, events: [], snapshot: this.snapshot() };
 		}
 		const text = await decodeJournalAsync(buffer);
-		if (text.length < this._lastGoodText.length && !text.startsWith(this._lastGoodText)) {
+		if (text.length < this._lastGoodTextLength) {
 			// Journal was rewritten/compacted: start over from the new content.
 			this._lineCount = 0;
 			this._size = -1;
 			this._mtimeMs = -1;
 		}
-		this._lastGoodText = text;
+		this._lastGoodTextLength = text.length;
 		this._size = buffer.length;
 		this._mtimeMs = mtimeMs;
 
@@ -522,7 +522,7 @@ export function firstLine(text) {
 
 /** Truncate with an ellipsis, collapse whitespace. */
 export function truncate(text, length = 100) {
-	const one = String(text ?? '').replace(/\s+/g, ' ').trim();
+	const one = String(text ?? '').replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim();
 	if (one.length <= length) return one;
 	return `${one.slice(0, Math.max(0, length - 1))}…`;
 }

@@ -22,7 +22,7 @@
  * @module dsh-plugin-herdr
  */
 
-import { appendFileSync, mkdirSync, openSync, renameSync, rmSync, writeFileSync, writeSync } from 'node:fs'
+import { appendFileSync, chmodSync, closeSync, mkdirSync, openSync, renameSync, rmSync, writeFileSync, writeSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 
@@ -75,7 +75,9 @@ function resolveTtySink(stdoutIsTty) {
   try {
     // `w` on the controlling terminal only; kept open for the plugin lifetime.
     const fd = openSync('/dev/tty', 'w')
-    return payload => writeSync(fd, payload)
+    const sink = payload => writeSync(fd, payload)
+    sink.close = () => closeSync(fd)
+    return sink
   } catch {
     return undefined
   }
@@ -182,7 +184,7 @@ export function apply(ctx, config) {
   // (the normal case); when a launcher captures stdout through a pipe
   // (`dsh ... | tee log`), still report through /dev/tty so OSC never lands in
   // the captured log and Herdr still receives it.
-  const ttySink = resolveTtySink(stdoutIsTty)
+  const ttySink = options.osc && herdrDetected ? resolveTtySink(stdoutIsTty) : undefined
   const ttyPath = stdoutIsTty ? '/dev/stdout (tty)' : (ttySink !== undefined ? '/dev/tty' : null)
   const oscEnabled = options.osc && herdrDetected && ttySink !== undefined
 
@@ -217,7 +219,10 @@ export function apply(ctx, config) {
     try {
       const dir = dirname(options.stateFile)
       mkdirSync(dir, { recursive: true })
-      appendFileSync(join(dir, 'herdr-debug.jsonl'), `${JSON.stringify({ ts: Date.now(), pid: process.pid, kind, ...detail })}\n`)
+      const file = join(dir, 'herdr-debug.jsonl')
+      appendFileSync(file, '', { mode: 0o600 })
+      chmodSync(file, 0o600)
+      appendFileSync(file, `${JSON.stringify({ ts: Date.now(), pid: process.pid, kind, ...detail })}\n`)
     } catch (error) {
       reportError('debug trace', error)
     }
@@ -670,7 +675,7 @@ export function apply(ctx, config) {
         case 'tool/call': {
           const callId = String(event.data?.callId ?? '')
           const toolName = event.data?.name
-          if (toolName === 'ask_user_question') {
+          if (toolName === 'ask_user_question' || toolName === 'exit_plan_mode') {
             const hint = questionHint(event.data?.arguments)
             record.pendingQuestions.set(callId, hint)
             touch(record, { status: 'blocked', activity: hint, blockedReason: 'question' })
@@ -681,10 +686,14 @@ export function apply(ctx, config) {
           return
         }
         case 'tool/result': {
-          const callId = String(event.data?.callId ?? '')
+          const callId = String(event.data?.message?.toolCallId
+            ?? event.data?.message?.source?.callId
+            ?? event.data?.toolCallId ?? event.data?.callId ?? '')
           if (record.pendingQuestions.delete(callId)) {
+            record.activity = null
             refreshStatus(record)
-            touch(record, {})
+            record.updatedMs = Date.now()
+            scheduleFlush()
             return
           }
           if (record.tool?.callId === callId) record.tool = null
@@ -702,7 +711,8 @@ export function apply(ctx, config) {
           const id = String(event.data?.id ?? '')
           if (record.pendingApprovals.delete(id)) {
             refreshStatus(record)
-            touch(record, {})
+            record.updatedMs = Date.now()
+            scheduleFlush()
           }
           return
         }
@@ -872,6 +882,7 @@ export function apply(ctx, config) {
     timers.clear()
     flushTimer = undefined
     heartbeatTimer = undefined
+    try { ttySink?.close?.() } catch { /* terminal already gone */ }
     try {
       writeStateDocument()
       // Leave the state document with an empty session list? No: the host is

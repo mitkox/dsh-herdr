@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -67,7 +67,9 @@ function run(home, extra = []) {
   const result = spawnSync(process.execPath, [LAUNCHER, 'watch', '--once', '--no-osc', '--state', state, ...extra], {
     env: { ...process.env, DSH_HOME: home, DSH_HERDR_STATE: state, HC_TERMINAL_ID: '', HC_TERMINAL_SOCKET: '' },
     encoding: 'utf8',
+    timeout: 5000,
   })
+  assert.ifError(result.error)
   assert.equal(result.status, 0, `launcher failed: ${result.stderr}`)
   return { summary: JSON.parse(result.stdout), state: JSON.parse(readFileSync(state, 'utf8')) }
 }
@@ -128,6 +130,7 @@ test('reports blocked/permission for a pending approval, then clears it', () => 
     assert.equal(blocked.summary.aggregate.kind, 'permission')
     assert.match(blocked.summary.aggregate.msg, /approval: bash/)
     assert.equal(blocked.state.sessions[0].status, 'blocked')
+    assert.equal(blocked.summary.sessions[0].status, 'blocked')
     assert.equal(blocked.state.sessions[0].blockedReason, 'permission')
 
     // The same journal with the decision appended is no longer blocked.
@@ -160,6 +163,7 @@ test('reports blocked/question for an unanswered ask_user_question call', () => 
     assert.equal(summary.aggregate.state, 'blocked')
     assert.equal(summary.aggregate.kind, 'question')
     assert.match(summary.aggregate.msg, /Which date should we ship\?/)
+    assert.equal(summary.sessions[0].status, 'blocked')
   } finally { rmSync(home, { recursive: true, force: true }) }
 })
 
@@ -197,6 +201,44 @@ test('prefers the top-level session title over a sub-agent', () => {
     assert.equal(summary.aggregate.state, 'working')
     assert.equal(summary.aggregate.title, 'Top-level task')
     assert.ok(state.sessions.some((s) => s.depth === 1))
+  } finally { rmSync(home, { recursive: true, force: true }) }
+})
+
+test('survives null tool arguments and processes later events', () => {
+  const home = makeHome([{
+    slug: 'null', id: 'null', header: header('null'),
+    events: [event('turn/start'), event('tool/call', { name: 'bash', arguments: 'null' }), event('turn/end')],
+  }])
+  try { assert.equal(run(home).summary.aggregate.state, 'idle') }
+  finally { rmSync(home, { recursive: true, force: true }) }
+})
+
+test('one-shot summary agrees with stale state rows', () => {
+  const old = Date.now() - 30 * 60 * 1000
+  const home = makeHome([{
+    slug: 'stale', id: 'stale', header: header('stale'),
+    events: [{ type: 'turn/start', seq: 1, time: old, data: { turn: 1 } }],
+  }])
+  try {
+    utimesSync(path.join(home, 'sessions/stale/stale/session.v4.jsonl.zstd'), old / 1000, old / 1000)
+    const { summary, state } = run(home)
+    assert.equal(summary.sessions[0].status, 'idle')
+    assert.deepEqual(summary.sessions[0], state.sessions[0])
+    assert.match(summary.sessions[0].activity, /^stale:/)
+  } finally { rmSync(home, { recursive: true, force: true }) }
+})
+
+test('subcommand help exits before any monitoring or installation', () => {
+  const home = mkdtempSync(path.join(tmpdir(), 'dsh-herdr-help-'))
+  try {
+    for (const command of ['watch', 'attach', 'daemon', 'install']) {
+      const result = spawnSync(process.execPath, [LAUNCHER, command, '--help'], {
+        env: { ...process.env, DSH_HOME: home, XDG_STATE_HOME: home }, encoding: 'utf8', timeout: 1000,
+      })
+      assert.ifError(result.error)
+      assert.equal(result.status, 0, result.stderr)
+      assert.match(result.stdout, /Usage:/)
+    }
   } finally { rmSync(home, { recursive: true, force: true }) }
 })
 
